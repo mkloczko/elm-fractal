@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Fractals</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+				color : #f0f0f0;
+			}
+			#renderer{
+				position : relative;
+			}
+			#controls{
+				position : absolute;
+				margin-left: 5%;
+				margin-right: 5%;
+				top   : 80%;
+				left : 5%;
+				width : 80%;
+				color : #f0ff00;
+			}
+		</style>
+	</head>
+	<body>
+
+		<script src="dependencies/three.min.js"></script>
+
+		<script src="dependencies/stats.min.js"></script>
+		<script src="elm.js"></script>
+		<script src="dependencies/AnaglyphEffect.js"></script>
+		
+
+		<script>
+
+		</script>
+
+
+		<div id="renderer">
+			<center><div id="controls">
+				<p>  
+				</p>
+				</div></center>
+		</div>
+
+
+		<script>
+
+			var container, stats;
+			var camera, scene, raycaster, renderer, parentTransform, sphereInter, effect;
+			var anaglyph_on = false;
+			var anaglyph_focal = 125;
+			var mouse = new THREE.Vector2();
+			var radius = 100, theta = 0;
+			
+			var currentIntersected;
+
+			init();
+			animate();
+
+
+
+			function init() {
+
+				container = document.getElementById( 'renderer' );
+				// document.body.appendChild( container );
+
+
+				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
+				scene = new THREE.Scene();
+
+				var geometry = new THREE.SphereGeometry( 1 );
+				var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+
+				sphereInter = new THREE.Mesh( geometry, material );
+				sphereInter.visible = false;
+				scene.add( sphereInter );
+
+				/// backgroup grids
+				var helper = new THREE.GridHelper( 80, 10 );
+				helper.setColors (0xf0f0f0, 0xa0a0a0)
+				scene.add( helper );
+
+				var axisHelper = new THREE.AxisHelper( 25 );
+				axisHelper.position.y = 0.01
+				axisHelper.rotation.x = -Math.PI/2;
+				axisHelper.rotation.z = Math.PI;
+				scene.add( axisHelper );
+
+
+				parentTransform = new THREE.Object3D();
+				parentTransform.position.x = 0;
+				parentTransform.position.y = 0;
+				parentTransform.position.z = 0;
+
+				// parentTransform.rotation.x = Math.random() * 2 * Math.PI;
+				parentTransform.rotation.x = 0;
+				parentTransform.rotation.y = 0;
+				parentTransform.rotation.z = 0;
+
+				parentTransform.scale.x = 1;
+				parentTransform.scale.y = 1;
+				parentTransform.scale.z = 1;
+
+				var geometry = new THREE.Geometry();
+
+				var point = new THREE.Vector3();
+				var direction = new THREE.Vector3();
+
+				for ( var i = 0; i < 10; i ++ ) {
+
+					direction.x += Math.random() - 0.5;
+					direction.y += Math.random() - 0.5;
+					direction.z += Math.random() - 0.5;
+					direction.normalize().multiplyScalar( 1 );
+
+					point.add( direction );
+
+					geometry.vertices.push( point.clone() );
+
+				}
+
+
+				var div = document.getElementById('controls');
+				controls = Elm.embed(Elm.Controls, div, {in_init: false });
+				// controls = Elm.worker(Elm.Controls, {iterations:1000});
+				var material = new THREE.LineBasicMaterial({
+					color: 0xacbd00
+				});
+				var graph = new THREE.Line( geometry,material );
+
+
+
+
+				graph.position.x = 0;
+				graph.position.y = 0;
+				graph.position.z = 0;
+
+				graph.rotation.x = -Math.PI/2;
+				graph.rotation.z = Math.PI;
+				// graph.rotation.x = 0;
+				// graph.rotation.y = 0;
+				// graph.rotation.z = 0;
+				graph.scale.x = 1;
+				graph.scale.y = 1;
+				graph.scale.z = 1;
+				parentTransform.add( graph );
+
+				// ELM stuff!
+				function changeGraph(points) { 
+					console.log(points.length)
+					graph.geometry = new THREE.Geometry();
+					points.map( function(pt){
+						var threePt = new THREE.Vector3();
+						threePt.x = pt.x;
+						threePt.y = pt.y;
+						threePt.z = pt.z;
+
+						//console.log(threePt)
+						graph.geometry.vertices.push(threePt);
+					});
+
+
+					// graph.geometry.vertices = points;
+					graph.geometry.verticesNeedUpdate = true;
+				}
+				controls.ports.out_points.subscribe(changeGraph);
+ 				
+
+				scene.add( parentTransform );
+
+				raycaster = new THREE.Raycaster();
+				raycaster.linePrecision = 3;
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setClearColor( 0x000000 );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild(renderer.domElement);
+				
+
+				controls.ports.in_init.send(true);
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+				document.addEventListener( 'onkeypress', onKeyPress );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+			
+			function onKeyPress(event){
+			    console.log("Whee");
+				var chCode = ('charCode' in event) ? event.charCode : event.keyCode;
+				console.log ("The Unicode character code is: " + chCode);
+				if (chCode == 'a')
+				    anaglyph_on = !anaglyph_on;
+			}
+
+			function onDocumentMouseMove( event ) {
+
+				event.preventDefault();
+
+				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+
+			}
+
+			function render() {
+
+				theta += 0.1;
+
+				camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				camera.position.y = 30 + radius * Math.sin( THREE.Math.degToRad( theta ) );
+				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+				var lookAt = new THREE.Vector3();
+				lookAt.y = 30;
+				camera.lookAt( lookAt );
+
+				camera.updateMatrixWorld();
+
+				// find intersections
+
+				raycaster.setFromCamera( mouse, camera );
+
+				var intersects = raycaster.intersectObjects( parentTransform.children, true);
+
+				if ( intersects.length > 0 ) {
+
+					if ( currentIntersected !== undefined ) {
+
+						currentIntersected.material.linewidth = 1;
+
+					}
+
+					currentIntersected = intersects[ 0 ].object;
+					// currentIntersected.material.linewidth = 5;
+
+					sphereInter.visible = true;
+					sphereInter.position.copy( intersects[ 0 ].point );
+
+				} else {
+
+					if ( currentIntersected !== undefined ) {
+
+						currentIntersected.material.linewidth = 1;
+
+					}
+
+					currentIntersected = undefined;
+
+					sphereInter.visible = false;
+
+				}
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+	</body>
+</html>
