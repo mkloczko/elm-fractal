@@ -12483,6 +12483,101 @@ Elm.MyElements.make = function (_elm) {
                                        ,functionsChoice: functionsChoice
                                        ,functionButtons: functionButtons};
     };
+Elm.Point3D = Elm.Point3D || {};
+Elm.Point3D.make = function (_elm) {
+       "use strict";
+       _elm.Point3D = _elm.Point3D || {};
+       if (_elm.Point3D.values)    return _elm.Point3D.values;
+       var _U = Elm.Native.Utils.make(_elm),
+       $Basics = Elm.Basics.make(_elm),
+       $Debug = Elm.Debug.make(_elm),
+       $List = Elm.List.make(_elm),
+       $Maybe = Elm.Maybe.make(_elm),
+       $Result = Elm.Result.make(_elm),
+       $Signal = Elm.Signal.make(_elm);
+       var _op = {};
+       var divScalar = F2(function (_p0,v) {
+                          var _p1 = _p0;
+                          return {x: _p1.x / v,y: _p1.y / v,z: _p1.z / v};
+                       });
+       var multScalar = F2(function (_p2,v) {
+                           var _p3 = _p2;
+                           return {x: _p3.x * v,y: _p3.y * v,z: _p3.z * v};
+                        });
+       var addPoint = F2(function (p1,p2) {
+                         return {x: p1.x + p2.x,y: p1.y + p2.y,z: p1.z + p2.z};
+                      });
+       var addScalar = F2(function (_p4,v) {
+                          var _p5 = _p4;
+                          return {x: _p5.x + v,y: _p5.y + v,z: _p5.z + v};
+                       });
+       var Point3D = F3(function (a,b,c) { return {x: a,y: b,z: c};});
+       return _elm.Point3D.values = {_op: _op
+                                    ,Point3D: Point3D
+                                    ,addScalar: addScalar
+                                    ,addPoint: addPoint
+                                    ,multScalar: multScalar
+                                    ,divScalar: divScalar};
+    };
+Elm.Numerical = Elm.Numerical || {};
+Elm.Numerical.make = function (_elm) {
+       "use strict";
+       _elm.Numerical = _elm.Numerical || {};
+       if (_elm.Numerical.values)    return _elm.Numerical.values;
+       var _U = Elm.Native.Utils.make(_elm),
+       $Basics = Elm.Basics.make(_elm),
+       $Debug = Elm.Debug.make(_elm),
+       $List = Elm.List.make(_elm),
+       $Maybe = Elm.Maybe.make(_elm),
+       $Point3D = Elm.Point3D.make(_elm),
+       $Result = Elm.Result.make(_elm),
+       $Signal = Elm.Signal.make(_elm),
+       $Trampoline = Elm.Trampoline.make(_elm);
+       var _op = {};
+       var prepareFunction = F3(function (f,dt,p0) {
+                                return A2($Point3D.multScalar,f(p0),dt);
+                             });
+       var generate$ = F4(function (f,v,i,vs) {
+                          if (_U.cmp(i,0) < 1)    return $Trampoline.Done(vs); else {
+                             var val = f(v);
+                             return $Trampoline.Continue(function (_p0) {
+                                    var _p1 = _p0;
+                                    return A4(generate$,f,val,i - 1,A2($List._op["::"],val,vs));
+                                 });
+                          }
+                       });
+       var generate = F3(function (f,v,i) {
+                         return $Trampoline.trampoline(A4(generate$,f,v,i,_U.list([])));
+                      });
+       var rk4 = F4(function (f,dt,t0,p0) {
+                    var div = $Point3D.divScalar;
+                    var mult = $Point3D.multScalar;
+                    var k1 = A2(mult,A2(f,t0,p0),dt);
+                    var add = $Point3D.addPoint;
+                    var k2 = A2(mult,A2(f,t0 + dt / 2,A2(add,p0,A2(div,k1,2))),dt);
+                    var k3 = A2(mult,A2(f,t0 + dt / 2,A2(add,p0,A2(div,k2,2))),dt);
+                    var k4 = A2(mult,A2(f,t0 + dt,A2(add,p0,k3)),dt);
+                    return A2(add
+                             ,p0
+                             ,A2(div
+                                ,A2(add,A2(add,A2(add,k1,A2(mult,k2,2)),A2(mult,k3,2)),k4)
+                                ,6));
+                 });
+       var euler = F2(function (f,p0) {
+                      return A2($Point3D.addPoint,f(p0),p0);
+                   });
+       var useEuler = F4(function (f,dt,p0,max_i) {
+                         var numFun = euler(A2(prepareFunction,f,dt));
+                         return A3(generate,numFun,p0,max_i);
+                      });
+       return _elm.Numerical.values = {_op: _op
+                                      ,euler: euler
+                                      ,rk4: rk4
+                                      ,generate: generate
+                                      ,generate$: generate$
+                                      ,prepareFunction: prepareFunction
+                                      ,useEuler: useEuler};
+    };
 Elm.Controls = Elm.Controls || {};
 Elm.Controls.make = function (_elm) {
        "use strict";
@@ -12495,6 +12590,8 @@ Elm.Controls.make = function (_elm) {
        $List = Elm.List.make(_elm),
        $Maybe = Elm.Maybe.make(_elm),
        $MyElements = Elm.MyElements.make(_elm),
+       $Numerical = Elm.Numerical.make(_elm),
+       $Point3D = Elm.Point3D.make(_elm),
        $Result = Elm.Result.make(_elm),
        $Signal = Elm.Signal.make(_elm),
        $Signal$Extra = Elm.Signal.Extra.make(_elm),
@@ -12556,7 +12653,7 @@ Elm.Controls.make = function (_elm) {
                   }();
        var lorenzParams = function () {
                              var createLorenz = F3(function (el1,el2,el3) {
-                                                   return {p1: el1,p2: el2,p3: el3,dt: 5.0e-3};
+                                                   return {p1: el1,p2: el2,p3: el3};
                                                 });
                              return A2($Signal$Extra._op["~"]
                                       ,A2($Signal$Extra._op["~"]
@@ -12615,7 +12712,7 @@ Elm.Controls.make = function (_elm) {
                                                ,list) {
                                       var _p7 = _U.eq(max_i,i);
                                       if (_p7 === false) {
-                                         var new_pt = $function(pt);
+                                         var new_pt = A2($Numerical.euler,$function,pt);
                                          var new_list = A2($List._op["::"],new_pt,list);
                                          return $Trampoline.Continue(function (_p8) {
                                                 var _p9 = _p8;
@@ -12632,19 +12729,18 @@ Elm.Controls.make = function (_elm) {
                                    });
        var lorenzFunction = F2(function (_p11,_p10) {
                                var _p12 = _p11;
-                               var _p17 = _p12.dt;
                                var _p13 = _p10;
                                var _p16 = _p13.z;
                                var _p15 = _p13.y;
                                var _p14 = _p13.x;
-                               var nz = _p16 + _p17 * (_p14 * _p15 - _p12.p3 * _p16);
-                               var ny = _p15 + _p17 * (_p14 * (_p12.p2 - _p16) - _p15);
-                               var nx = _p14 + _p17 * (_p12.p1 * (_p15 - _p14));
+                               var nz = _p14 * _p15 - _p12.p3 * _p16;
+                               var ny = _p14 * (_p12.p2 - _p16) - _p15;
+                               var nx = _p12.p1 * (_p15 - _p14);
                                return {x: nx,y: ny,z: nz};
                             });
        var chooseFunction = function () {
                                var chooseFun = F2(function (what_f,lorenzParams) {
-                                                  var _p18 = what_f;
+                                                  var _p17 = what_f;
                                                   return lorenzFunction(lorenzParams);
                                                });
                                return A2($Signal$Extra._op["~"]
@@ -12653,8 +12749,8 @@ Elm.Controls.make = function (_elm) {
                                            ,$MyElements.functionsChoice.signal)
                                         ,$Signal.dropRepeats(lorenzParams));
                             }();
-       var LorenzParams = F4(function (a,b,c,d) {
-                             return {p1: a,p2: b,p3: c,dt: d};
+       var LorenzParams = F3(function (a,b,c) {
+                             return {p1: a,p2: b,p3: c};
                           });
        var distance3D = F2(function (pt1,pt2) {
                            var dz = Math.pow(pt1.z - pt2.z,2);
@@ -12672,16 +12768,11 @@ Elm.Controls.make = function (_elm) {
           return A3($List.foldl,getFurthest,{x: 0,y: 0,z: 1},array);
        };
        var calculatePoints = F4(function (f,start_pt,max_i,dummy_val) {
-                                var divBy = F2(function (d,_p19) {
-                                               var _p20 = _p19;
-                                               return {x: _p20.x / d,y: _p20.y / d,z: _p20.z / d};
+                                var divBy = F2(function (d,_p18) {
+                                               var _p19 = _p18;
+                                               return {x: _p19.x / d,y: _p19.y / d,z: _p19.z / d};
                                             });
-                                var points = $Trampoline.trampoline(A5(calculateIterations3D
-                                                                      ,f
-                                                                      ,0
-                                                                      ,max_i
-                                                                      ,start_pt
-                                                                      ,_U.list([])));
+                                var points = A4($Numerical.useEuler,f,5.0e-3,start_pt,max_i);
                                 var max_d = A2(distance3D
                                               ,{x: 0,y: 0,z: 0}
                                               ,getFurthestPoint(points));
@@ -12702,9 +12793,7 @@ Elm.Controls.make = function (_elm) {
                                                          ,startingPoint)
                                                       ,$MyElements.iterations)
                                                    ,in_init));
-       var Point3D = F3(function (a,b,c) { return {x: a,y: b,z: c};});
        return _elm.Controls.values = {_op: _op
-                                     ,Point3D: Point3D
                                      ,distance3D: distance3D
                                      ,LorenzParams: LorenzParams
                                      ,lorenzFunction: lorenzFunction

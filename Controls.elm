@@ -16,6 +16,8 @@ import String
 import Trampoline exposing (..)
 
 import MyElements exposing (..)
+import Numerical exposing (..)
+import Point3D exposing (Point3D)
 -- Utility functions
 
 
@@ -23,11 +25,7 @@ import MyElements exposing (..)
 -- Model
 
 type alias FunctionRec = (Point3D -> Point3D)
-type alias Point3D = {
-    x : Float,
-    y : Float,
-    z : Float
-}
+
 
 distance3D : Point3D -> Point3D -> Float
 distance3D pt1 pt2 =
@@ -41,15 +39,14 @@ type alias Function3D  = (Point3D -> Point3D)
 type alias LorenzParams ={
     p1 : Float,
     p2 : Float,
-    p3 : Float,
-    dt : Float
+    p3 : Float
 }
 
 lorenzFunction : LorenzParams -> Point3D -> Point3D
-lorenzFunction {p1,p2,p3, dt} {x,y,z} =
-    let nx = x + dt*(p1*(y - x))
-        ny = y + dt*(x*(p2 - z) - y)
-        nz = z + dt*(x*y - p3*z)
+lorenzFunction {p1,p2,p3} {x,y,z} =
+    let nx = p1*(y - x)
+        ny = x*(p2 - z) - y
+        nz = x*y - p3*z
     in {x=nx,y=ny,z=nz}
 
 
@@ -58,7 +55,7 @@ calculateIterations3D : Function3D -> Int -> Int -> Point3D -> List Point3D -> T
 calculateIterations3D function i     max_i pt list = 
     case max_i == i of
         False ->
-            let new_pt = function pt
+            let new_pt = euler function pt
                 new_list = new_pt :: list
             in Continue (\() -> calculateIterations3D function (i+1) max_i new_pt new_list)
         True -> Done <| List.reverse list
@@ -86,7 +83,8 @@ getFurthestPoint array =
 
 calculatePoints : Function3D -> Point3D -> Int -> Bool -> List Point3D
 calculatePoints f start_pt max_i dummy_val = 
-    let points = trampoline <| calculateIterations3D f 0 max_i start_pt []
+    --let points = trampoline <| calculateIterations3D (prepareFunction f 0.005) 0 max_i start_pt []
+    let points = useEuler f 0.005 start_pt max_i
         max_d  = distance3D {x=0,y=0,z=0} <| getFurthestPoint points
         d      = max_d / 160
         divBy d {x,y,z} = {x = x/d, y = y/d, z = z/d}
@@ -129,7 +127,7 @@ startingPoint =
 
 lorenzParams : Signal LorenzParams
 lorenzParams = 
-    let createLorenz el1 el2 el3 = {p1 = el1, p2 = el2, p3 = el3, dt = 0.005}
+    let createLorenz el1 el2 el3 = {p1 = el1, p2 = el2, p3 = el3}
     in  createLorenz <~ p1 ~ p2 ~ p3
 
 
