@@ -12331,7 +12331,6 @@ Elm.NumericBox.make = function (_elm) {
        var _U = Elm.Native.Utils.make(_elm),
        $Basics = Elm.Basics.make(_elm),
        $Debug = Elm.Debug.make(_elm),
-       $Graphics$Element = Elm.Graphics.Element.make(_elm),
        $Html = Elm.Html.make(_elm),
        $Html$Attributes = Elm.Html.Attributes.make(_elm),
        $Html$Events = Elm.Html.Events.make(_elm),
@@ -12341,12 +12340,39 @@ Elm.NumericBox.make = function (_elm) {
        $Signal = Elm.Signal.make(_elm),
        $String = Elm.String.make(_elm);
        var _op = {};
+       var dropdown = F2(function (sender,vals) {
+                         var options = A2($List.map
+                                         ,function (_p0) {
+                                            var _p1 = _p0;
+                                            return A2($Html.option
+                                                     ,_U.list([$Html$Attributes.value(_p1._0)])
+                                                     ,_U.list([$Html.text(_p1._1)]));
+                                         }
+                                         ,vals);
+                         var listener1 = A3($Html$Events.on
+                                           ,"change"
+                                           ,$Html$Events.targetValue
+                                           ,function (str) {
+                                              return sender(str);
+                                           });
+                         var attribs = _U.list([listener1]);
+                         var the_element = A2($Html.select,attribs,options);
+                         return the_element;
+                      });
+       var radio = F3(function (sender,val,is_on) {
+                      var listener1 = A3($Html$Events.on
+                                        ,"change"
+                                        ,$Html$Events.targetChecked
+                                        ,function (_p2) {
+                                           return sender(val);
+                                        });
+                      var attribs = _U.list([listener1
+                                            ,$Html$Attributes.type$("radio")
+                                            ,$Html$Attributes.checked(is_on)]);
+                      var the_element = A2($Html.input,attribs,_U.list([]));
+                      return the_element;
+                   });
        var intBox = F5(function (sender,min,max,step,val) {
-                       var attribs_size =
-                       _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2"
-                                                                ,_0: "width"
-                                                                ,_1: "89%"}
-                                                               ,{ctor: "_Tuple2",_0: "height",_1: "100%"}]))]);
                        var listener1 = A3($Html$Events.on
                                          ,"input"
                                          ,$Html$Events.targetValue
@@ -12359,20 +12385,10 @@ Elm.NumericBox.make = function (_elm) {
                                              ,$Html$Attributes.min($Basics.toString(min))
                                              ,$Html$Attributes.max($Basics.toString(max))
                                              ,$Html$Attributes.value($Basics.toString(val))]);
-                       var the_element = A3($Html.toElement
-                                           ,100
-                                           ,22
-                                           ,A2($Html.input
-                                              ,A2($Basics._op["++"],attribs,attribs_size)
-                                              ,_U.list([])));
+                       var the_element = A2($Html.input,attribs,_U.list([]));
                        return the_element;
                     });
        var floatBox = F5(function (sender,min,max,step,val) {
-                         var attribs_size =
-                         _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2"
-                                                                  ,_0: "width"
-                                                                  ,_1: "89%"}
-                                                                 ,{ctor: "_Tuple2",_0: "height",_1: "100%"}]))]);
                          var listener1 = A3($Html$Events.on
                                            ,"input"
                                            ,$Html$Events.targetValue
@@ -12385,17 +12401,14 @@ Elm.NumericBox.make = function (_elm) {
                                                ,$Html$Attributes.min($Basics.toString(min))
                                                ,$Html$Attributes.max($Basics.toString(max))
                                                ,$Html$Attributes.value($Basics.toString(val))]);
-                         var the_element = A3($Html.toElement
-                                             ,100
-                                             ,22
-                                             ,A2($Html.input
-                                                ,A2($Basics._op["++"],attribs,attribs_size)
-                                                ,_U.list([])));
+                         var the_element = A2($Html.input,attribs,_U.list([]));
                          return the_element;
                       });
        return _elm.NumericBox.values = {_op: _op
                                        ,floatBox: floatBox
-                                       ,intBox: intBox};
+                                       ,intBox: intBox
+                                       ,radio: radio
+                                       ,dropdown: dropdown};
     };
 Elm.MyElements = Elm.MyElements || {};
 Elm.MyElements.make = function (_elm) {
@@ -12405,8 +12418,8 @@ Elm.MyElements.make = function (_elm) {
        var _U = Elm.Native.Utils.make(_elm),
        $Basics = Elm.Basics.make(_elm),
        $Debug = Elm.Debug.make(_elm),
-       $Graphics$Element = Elm.Graphics.Element.make(_elm),
        $Graphics$Input = Elm.Graphics.Input.make(_elm),
+       $Html = Elm.Html.make(_elm),
        $List = Elm.List.make(_elm),
        $Maybe = Elm.Maybe.make(_elm),
        $NumericBox = Elm.NumericBox.make(_elm),
@@ -12414,8 +12427,41 @@ Elm.MyElements.make = function (_elm) {
        $Signal = Elm.Signal.make(_elm),
        $Signal$Extra = Elm.Signal.Extra.make(_elm);
        var _op = {};
+       var RK4 = {ctor: "RK4"};
+       var methodChoice = $Signal.mailbox(RK4);
+       var isRK4 = function (method) { return _U.eq(RK4,method);};
+       var switchRK4Euler =
+       $Signal$Extra.switchSample(A2($Signal$Extra._op["<~"]
+                                    ,isRK4
+                                    ,methodChoice.signal));
+       var Euler = {ctor: "Euler"};
+       var methodRadios = function () {
+                             var name2 = $Html.text("RK 4");
+                             var name1 = $Html.text("Euler");
+                             var isEq = F2(function (a,b) { return _U.eq(a,b);});
+                             var rad1 = A2($Signal$Extra._op["<~"]
+                                          ,A2($NumericBox.radio
+                                             ,$Signal.message(methodChoice.address)
+                                             ,Euler)
+                                          ,A2($Signal$Extra._op["<~"],isEq(Euler),methodChoice.signal));
+                             var rad2 = A2($Signal$Extra._op["<~"]
+                                          ,A2($NumericBox.radio,$Signal.message(methodChoice.address),RK4)
+                                          ,A2($Signal$Extra._op["<~"],isEq(RK4),methodChoice.signal));
+                             return _U.list([rad1
+                                            ,$Signal.constant(name1)
+                                            ,rad2
+                                            ,$Signal.constant(name2)]);
+                          }();
+       var Rossler = {ctor: "Rossler"};
+       var isRossler = function (funtype) {
+          return _U.eq(Rossler,funtype);
+       };
        var Lorenz = {ctor: "Lorenz"};
        var functionsChoice = $Signal.mailbox(Lorenz);
+       var switchRosslerLorenz =
+       $Signal$Extra.switchSample(A2($Signal$Extra._op["<~"]
+                                    ,isRossler
+                                    ,functionsChoice.signal));
        var functionButtons = A2($Graphics$Input.dropDown
                                ,$Signal.message(functionsChoice.address)
                                ,_U.list([{ctor: "_Tuple2",_0: "Lorenz",_1: Lorenz}]));
@@ -12430,24 +12476,50 @@ Elm.MyElements.make = function (_elm) {
                                                    ,the_mailbox.signal);
                                return {ctor: "_Tuple2",_0: the_mailbox.signal,_1: the_element};
                             });
-       var _p0 = A4(floatSignalBox,-1,100,5.0e-4,10);
-       var p1 = _p0._0;
-       var p1Field = _p0._1;
-       var _p1 = A4(floatSignalBox,-1,100,5.0e-4,28);
-       var p2 = _p1._0;
-       var p2Field = _p1._1;
-       var _p2 = A4(floatSignalBox,-1,100,5.0e-4,2.66);
-       var p3 = _p2._0;
-       var p3Field = _p2._1;
-       var _p3 = A4(floatSignalBox,-100,100,0.2,1);
-       var xSignal = _p3._0;
-       var xField = _p3._1;
-       var _p4 = A4(floatSignalBox,-100,100,0.2,1);
-       var ySignal = _p4._0;
-       var yField = _p4._1;
-       var _p5 = A4(floatSignalBox,-100,100,0.2,1);
-       var zSignal = _p5._0;
-       var zField = _p5._1;
+       var _p0 = A4(floatSignalBox,0,2,5.0e-4,5.0e-3);
+       var dte_time = _p0._0;
+       var dteField = _p0._1;
+       var _p1 = A4(floatSignalBox,0,2,5.0e-4,5.0e-2);
+       var dtrk_time = _p1._0;
+       var dtrkField = _p1._1;
+       var delta_time = A2(switchRK4Euler,dtrk_time,dte_time);
+       var dtField = A2(switchRK4Euler,dtrkField,dteField);
+       var _p2 = A4(floatSignalBox,0,5,5.0e-2,0.5);
+       var start_time = _p2._0;
+       var t0Field = _p2._1;
+       var _p3 = A4(floatSignalBox,-1,100,5.0e-4,10);
+       var pl1 = _p3._0;
+       var pl1Field = _p3._1;
+       var _p4 = A4(floatSignalBox,-1,100,5.0e-4,28);
+       var pl2 = _p4._0;
+       var pl2Field = _p4._1;
+       var _p5 = A4(floatSignalBox,-1,100,5.0e-4,2.66);
+       var pl3 = _p5._0;
+       var pl3Field = _p5._1;
+       var _p6 = A4(floatSignalBox,-1,100,5.0e-4,0.2);
+       var pr1 = _p6._0;
+       var pr1Field = _p6._1;
+       var p1 = A2(switchRosslerLorenz,pr1,pl1);
+       var p1Field = A2(switchRosslerLorenz,pr1Field,pl1Field);
+       var _p7 = A4(floatSignalBox,-1,100,5.0e-4,0.2);
+       var pr2 = _p7._0;
+       var pr2Field = _p7._1;
+       var p2 = A2(switchRosslerLorenz,pr2,pl2);
+       var p2Field = A2(switchRosslerLorenz,pr2Field,pl2Field);
+       var _p8 = A4(floatSignalBox,-1,100,5.0e-4,5.7);
+       var pr3 = _p8._0;
+       var pr3Field = _p8._1;
+       var p3 = A2(switchRosslerLorenz,pr3,pl3);
+       var p3Field = A2(switchRosslerLorenz,pr3Field,pl3Field);
+       var _p9 = A4(floatSignalBox,-100,100,0.2,1);
+       var xSignal = _p9._0;
+       var xField = _p9._1;
+       var _p10 = A4(floatSignalBox,-100,100,0.2,1);
+       var ySignal = _p10._0;
+       var yField = _p10._1;
+       var _p11 = A4(floatSignalBox,-100,100,0.2,1);
+       var zSignal = _p11._0;
+       var zField = _p11._1;
        var intSignalBox = F4(function (min,max,step,val) {
                              var the_mailbox = $Signal.mailbox(val);
                              var the_element = A2($Signal$Extra._op["<~"]
@@ -12459,20 +12531,32 @@ Elm.MyElements.make = function (_elm) {
                                                  ,the_mailbox.signal);
                              return {ctor: "_Tuple2",_0: the_mailbox.signal,_1: the_element};
                           });
-       var _p6 = A4(intSignalBox,0,100000,100,10000);
-       var iterations = _p6._0;
-       var ixField = _p6._1;
+       var _p12 = A4(intSignalBox,0,100000,100,10000);
+       var iterations = _p12._0;
+       var ixField = _p12._1;
        return _elm.MyElements.values = {_op: _op
                                        ,intSignalBox: intSignalBox
                                        ,floatSignalBox: floatSignalBox
                                        ,iterations: iterations
                                        ,ixField: ixField
-                                       ,p1: p1
-                                       ,p1Field: p1Field
-                                       ,p2: p2
-                                       ,p2Field: p2Field
-                                       ,p3: p3
-                                       ,p3Field: p3Field
+                                       ,dteField: dteField
+                                       ,dte_time: dte_time
+                                       ,dtrkField: dtrkField
+                                       ,dtrk_time: dtrk_time
+                                       ,start_time: start_time
+                                       ,t0Field: t0Field
+                                       ,pl1: pl1
+                                       ,pl1Field: pl1Field
+                                       ,pl2: pl2
+                                       ,pl2Field: pl2Field
+                                       ,pl3: pl3
+                                       ,pl3Field: pl3Field
+                                       ,pr1: pr1
+                                       ,pr1Field: pr1Field
+                                       ,pr2: pr2
+                                       ,pr2Field: pr2Field
+                                       ,pr3: pr3
+                                       ,pr3Field: pr3Field
                                        ,xField: xField
                                        ,xSignal: xSignal
                                        ,yField: yField
@@ -12480,8 +12564,25 @@ Elm.MyElements.make = function (_elm) {
                                        ,zField: zField
                                        ,zSignal: zSignal
                                        ,Lorenz: Lorenz
+                                       ,Rossler: Rossler
                                        ,functionsChoice: functionsChoice
-                                       ,functionButtons: functionButtons};
+                                       ,functionButtons: functionButtons
+                                       ,Euler: Euler
+                                       ,RK4: RK4
+                                       ,methodChoice: methodChoice
+                                       ,methodRadios: methodRadios
+                                       ,isRK4: isRK4
+                                       ,switchRK4Euler: switchRK4Euler
+                                       ,delta_time: delta_time
+                                       ,dtField: dtField
+                                       ,isRossler: isRossler
+                                       ,switchRosslerLorenz: switchRosslerLorenz
+                                       ,p1: p1
+                                       ,p2: p2
+                                       ,p3: p3
+                                       ,p1Field: p1Field
+                                       ,p2Field: p2Field
+                                       ,p3Field: p3Field};
     };
 Elm.Point3D = Elm.Point3D || {};
 Elm.Point3D.make = function (_elm) {
@@ -12563,6 +12664,21 @@ Elm.Numerical.make = function (_elm) {
                                 ,A2(add,A2(add,A2(add,k1,A2(mult,k2,2)),A2(mult,k3,2)),k4)
                                 ,6));
                  });
+       var useRK4 = F5(function (f,dt,t0,p0,max_i) {
+                       var numFun = function (_p2) {
+                          var _p3 = _p2;
+                          var _p4 = _p3._0;
+                          return {ctor: "_Tuple2"
+                                 ,_0: _p4
+                                 ,_1: A4(rk4,prepareFunction(f),dt,_p4,_p3._1)};
+                       };
+                       var time_n_pts = A3(generate
+                                          ,numFun
+                                          ,{ctor: "_Tuple2",_0: t0,_1: p0}
+                                          ,max_i);
+                       var pts = A2($List.map,$Basics.snd,time_n_pts);
+                       return pts;
+                    });
        var euler = F2(function (f,p0) {
                       return A2($Point3D.addPoint,f(p0),p0);
                    });
@@ -12576,7 +12692,8 @@ Elm.Numerical.make = function (_elm) {
                                       ,generate: generate
                                       ,generate$: generate$
                                       ,prepareFunction: prepareFunction
-                                      ,useEuler: useEuler};
+                                      ,useEuler: useEuler
+                                      ,useRK4: useRK4};
     };
 Elm.Controls = Elm.Controls || {};
 Elm.Controls.make = function (_elm) {
@@ -12586,7 +12703,8 @@ Elm.Controls.make = function (_elm) {
        var _U = Elm.Native.Utils.make(_elm),
        $Basics = Elm.Basics.make(_elm),
        $Debug = Elm.Debug.make(_elm),
-       $Graphics$Element = Elm.Graphics.Element.make(_elm),
+       $Html = Elm.Html.make(_elm),
+       $Html$Attributes = Elm.Html.Attributes.make(_elm),
        $List = Elm.List.make(_elm),
        $Maybe = Elm.Maybe.make(_elm),
        $MyElements = Elm.MyElements.make(_elm),
@@ -12594,62 +12712,112 @@ Elm.Controls.make = function (_elm) {
        $Point3D = Elm.Point3D.make(_elm),
        $Result = Elm.Result.make(_elm),
        $Signal = Elm.Signal.make(_elm),
-       $Signal$Extra = Elm.Signal.Extra.make(_elm),
-       $Text = Elm.Text.make(_elm),
-       $Trampoline = Elm.Trampoline.make(_elm);
+       $Signal$Extra = Elm.Signal.Extra.make(_elm);
        var _op = {};
-       var functionElement = function () {
-                                var desc =
-                                $Graphics$Element.leftAligned($Text.fromString("Chosen function"));
-                                return A2($Graphics$Element.flow
-                                         ,$Graphics$Element.down
-                                         ,_U.list([desc,$MyElements.functionButtons]));
-                             }();
-       var iterationsElement = function () {
-                                  var desc =
-                                  $Graphics$Element.leftAligned($Text.fromString("Iterations"));
-                                  return A2($Signal$Extra._op["<~"]
-                                           ,$Graphics$Element.flow($Graphics$Element.down)
-                                           ,A2($Signal$Extra._op["<~"]
-                                              ,$List.append(_U.list([desc]))
-                                              ,$Signal$Extra.combine(_U.list([$MyElements.ixField]))));
-                               }();
-       var paramsElement = function () {
-                              var desc =
-                              $Graphics$Element.leftAligned($Text.fromString("Parameters"));
-                              return A2($Signal$Extra._op["<~"]
-                                       ,$Graphics$Element.flow($Graphics$Element.down)
-                                       ,A2($Signal$Extra._op["<~"]
-                                          ,$List.append(_U.list([desc]))
-                                          ,$Signal$Extra.combine(_U.list([$MyElements.p1Field
-                                                                         ,$MyElements.p2Field
-                                                                         ,$MyElements.p3Field]))));
-                           }();
+       var isRK4 = function (method) {
+          return _U.eq($MyElements.RK4,method);
+       };
+       var div_style = $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
+                                                       ,_0: "box-sizing"
+                                                       ,_1: "border-box"}
+                                                      ,{ctor: "_Tuple2",_0: "width",_1: "25%"}
+                                                      ,{ctor: "_Tuple2",_0: "float",_1: "left"}]));
+       var br = $Signal.constant(A2($Html.br,_U.list([]),_U.list([])));
        var startPosElement = function () {
-                                var desc =
-                                $Graphics$Element.leftAligned($Text.fromString("Starting position"));
+                                var z_desc = $Signal.constant($Html.text("z:"));
+                                var y_desc = $Signal.constant($Html.text("y:"));
+                                var x_desc = $Signal.constant($Html.text("x:"));
+                                var desc = $Signal.constant(A2($Html.span
+                                                              ,_U.list([])
+                                                              ,_U.list([$Html.text("Starting position")])));
                                 return A2($Signal$Extra._op["<~"]
-                                         ,$Graphics$Element.flow($Graphics$Element.down)
-                                         ,A2($Signal$Extra._op["<~"]
-                                            ,$List.append(_U.list([desc]))
-                                            ,$Signal$Extra.combine(_U.list([$MyElements.xField
-                                                                           ,$MyElements.yField
-                                                                           ,$MyElements.zField]))));
+                                         ,$Html.div(_U.list([div_style]))
+                                         ,$Signal$Extra.combine(_U.list([desc
+                                                                        ,br
+                                                                        ,x_desc
+                                                                        ,$MyElements.xField
+                                                                        ,br
+                                                                        ,y_desc
+                                                                        ,$MyElements.yField
+                                                                        ,br
+                                                                        ,z_desc
+                                                                        ,$MyElements.zField])));
+                             }();
+       var paramsElement = function () {
+                              var p3_d = $Signal.constant($Html.text("p3:"));
+                              var p2_d = $Signal.constant($Html.text("p2:"));
+                              var p1_d = $Signal.constant($Html.text("p1:"));
+                              var desc = $Signal.constant(A2($Html.span
+                                                            ,_U.list([])
+                                                            ,_U.list([$Html.text("Function Parameters")])));
+                              return A2($Signal$Extra._op["<~"]
+                                       ,$Html.div(_U.list([div_style]))
+                                       ,$Signal$Extra.combine(_U.list([desc
+                                                                      ,br
+                                                                      ,p1_d
+                                                                      ,$MyElements.p1Field
+                                                                      ,br
+                                                                      ,p2_d
+                                                                      ,$MyElements.p2Field
+                                                                      ,br
+                                                                      ,p3_d
+                                                                      ,$MyElements.p3Field])));
+                           }();
+       var iterationsElement = function () {
+                                  var t0_d = $Signal.constant($Html.text("t_0:"));
+                                  var t0_stuff = $Signal$Extra.combine(_U.list([br
+                                                                               ,t0_d
+                                                                               ,$MyElements.t0Field]));
+                                  var dt_d = $Signal.constant($Html.text("dt:"));
+                                  var ix_d = $Signal.constant($Html.text("ix:"));
+                                  var desc = $Signal.constant(A2($Html.span
+                                                                ,_U.list([])
+                                                                ,_U.list([$Html.text("Simulation")])));
+                                  var rest = $Signal$Extra.combine(_U.list([desc
+                                                                           ,br
+                                                                           ,ix_d
+                                                                           ,$MyElements.ixField
+                                                                           ,br
+                                                                           ,dt_d
+                                                                           ,$MyElements.dtField]));
+                                  return A2($Signal$Extra._op["<~"]
+                                           ,$Html.div(_U.list([div_style]))
+                                           ,A2($Signal$Extra._op["~"]
+                                              ,A2($Signal$Extra._op["<~"]
+                                                 ,F2(function (x,y) {
+                                                    return A2($Basics._op["++"],x,y);
+                                                 })
+                                                 ,rest)
+                                              ,A3($Signal$Extra.keepThen
+                                                 ,A2($Signal$Extra._op["<~"]
+                                                    ,isRK4
+                                                    ,$MyElements.methodChoice.signal)
+                                                 ,_U.list([])
+                                                 ,t0_stuff)));
+                               }();
+       var functionElement = function () {
+                                var method_desc = $Signal.constant($Html.text("Chosen method"));
+                                var desc = $Signal.constant(A2($Html.span
+                                                              ,_U.list([])
+                                                              ,_U.list([$Html.text("Chosen function")])));
+                                return A2($Signal$Extra._op["<~"]
+                                         ,$Html.div(_U.list([div_style]))
+                                         ,$Signal$Extra.combine(A2($Basics._op["++"]
+                                                                  ,_U.list([desc,br,method_desc,br])
+                                                                  ,$MyElements.methodRadios)));
                              }();
        var main = function () {
                      var rest_cols = A2($Signal$Extra._op["<~"]
-                                       ,$Graphics$Element.flow($Graphics$Element.right)
+                                       ,$Html.div(_U.list([]))
                                        ,$Signal$Extra.combine(_U.list([iterationsElement
                                                                       ,paramsElement
                                                                       ,startPosElement])));
-                     var first_col = A2($Graphics$Element.flow
-                                       ,$Graphics$Element.down
-                                       ,_U.list([functionElement]));
+                     var first_col = A2($Signal$Extra._op["<~"]
+                                       ,$Html.div(_U.list([]))
+                                       ,$Signal$Extra.combine(_U.list([functionElement])));
                      return A2($Signal$Extra._op["<~"]
-                              ,$Graphics$Element.flow($Graphics$Element.right)
-                              ,A2($Signal$Extra._op["<~"]
-                                 ,$List.append(_U.list([first_col]))
-                                 ,$Signal$Extra.combine(_U.list([rest_cols]))));
+                              ,$Html.div(_U.list([]))
+                              ,$Signal$Extra.combine(_U.list([first_col,rest_cols])));
                   }();
        var lorenzParams = function () {
                              var createLorenz = F3(function (el1,el2,el3) {
@@ -12677,71 +12845,36 @@ Elm.Controls.make = function (_elm) {
                                                                 return typeof v === "boolean" ? v
                                                                     : _U.badPort("a boolean (true or false)",v);
                                                              });
-       var getEvery$ = F4(function (n,ix,acc,list) {
-                          var _p0 = list;
-                          if (_p0.ctor === "::") {
-                             var _p6 = _p0._1;
-                             var _p1 = _U.cmp(n,ix) < 0;
-                             if (_p1 === false) {
-                                var new_acc = A2($List._op["::"],_p0._0,acc);
-                                return $Trampoline.Continue(function (_p2) {
-                                       var _p3 = _p2;
-                                       return A4(getEvery$,n,0,new_acc,_p6);
-                                    });
-                             } else {
-                                return $Trampoline.Continue(function (_p4) {
-                                       var _p5 = _p4;
-                                       return A4(getEvery$,n,ix + 1,acc,_p6);
-                                    });
-                             }
-                          } else {
-                             return $Trampoline.Done(acc);
-                          }
-                       });
-       var getEvery = F2(function (n,list) {
-                         return $Trampoline.trampoline(A4(getEvery$
-                                                         ,n
-                                                         ,0
-                                                         ,_U.list([])
-                                                         ,list));
-                      });
-       var calculateIterations3D = F5(function ($function
-                                               ,i
-                                               ,max_i
-                                               ,pt
-                                               ,list) {
-                                      var _p7 = _U.eq(max_i,i);
-                                      if (_p7 === false) {
-                                         var new_pt = A2($Numerical.euler,$function,pt);
-                                         var new_list = A2($List._op["::"],new_pt,list);
-                                         return $Trampoline.Continue(function (_p8) {
-                                                var _p9 = _p8;
-                                                return A5(calculateIterations3D
-                                                         ,$function
-                                                         ,i + 1
-                                                         ,max_i
-                                                         ,new_pt
-                                                         ,new_list);
-                                             });
-                                      } else {
-                                         return $Trampoline.Done($List.reverse(list));
-                                      }
-                                   });
-       var lorenzFunction = F2(function (_p11,_p10) {
-                               var _p12 = _p11;
-                               var _p13 = _p10;
-                               var _p16 = _p13.z;
-                               var _p15 = _p13.y;
-                               var _p14 = _p13.x;
-                               var nz = _p14 * _p15 - _p12.p3 * _p16;
-                               var ny = _p14 * (_p12.p2 - _p16) - _p15;
-                               var nx = _p12.p1 * (_p15 - _p14);
+       var lorenzFunction = F2(function (_p1,_p0) {
+                               var _p2 = _p1;
+                               var _p3 = _p0;
+                               var _p6 = _p3.z;
+                               var _p5 = _p3.y;
+                               var _p4 = _p3.x;
+                               var nz = _p4 * _p5 - _p2.p3 * _p6;
+                               var ny = _p4 * (_p2.p2 - _p6) - _p5;
+                               var nx = _p2.p1 * (_p5 - _p4);
                                return {x: nx,y: ny,z: nz};
                             });
+       var rosslerFunction = F2(function (_p8,_p7) {
+                                var _p9 = _p8;
+                                var _p10 = _p7;
+                                var _p13 = _p10.z;
+                                var _p12 = _p10.y;
+                                var _p11 = _p10.x;
+                                var nz = _p9.p2 + _p11 * _p13 - _p9.p3 * _p13;
+                                var ny = _p11 + _p9.p1 * _p12;
+                                var nx = 0 - (_p12 + _p13);
+                                return {x: nx,y: ny,z: nz};
+                             });
        var chooseFunction = function () {
                                var chooseFun = F2(function (what_f,lorenzParams) {
-                                                  var _p17 = what_f;
-                                                  return lorenzFunction(lorenzParams);
+                                                  var _p14 = what_f;
+                                                  if (_p14.ctor === "Lorenz") {
+                                                     return lorenzFunction(lorenzParams);
+                                                  } else {
+                                                     return rosslerFunction(lorenzParams);
+                                                  }
                                                });
                                return A2($Signal$Extra._op["~"]
                                         ,A2($Signal$Extra._op["<~"]
@@ -12767,17 +12900,31 @@ Elm.Controls.make = function (_elm) {
                             });
           return A3($List.foldl,getFurthest,{x: 0,y: 0,z: 1},array);
        };
-       var calculatePoints = F4(function (f,start_pt,max_i,dummy_val) {
-                                var divBy = F2(function (d,_p18) {
-                                               var _p19 = _p18;
-                                               return {x: _p19.x / d,y: _p19.y / d,z: _p19.z / d};
-                                            });
-                                var points = A4($Numerical.useEuler,f,5.0e-3,start_pt,max_i);
-                                var max_d = A2(distance3D
-                                              ,{x: 0,y: 0,z: 0}
-                                              ,getFurthestPoint(points));
-                                var d = max_d / 160;
-                                return A2($List.map,divBy(d),points);
+       var scalePoints = function (points) {
+          var max_d = A2(distance3D
+                        ,{x: 0,y: 0,z: 0}
+                        ,getFurthestPoint(points));
+          var d = max_d / 160;
+          return A2($List.map
+                   ,A2($Basics.flip,$Point3D.divScalar,d)
+                   ,points);
+       };
+       var calculatePoints = F7(function (method
+                                         ,f
+                                         ,start_pt
+                                         ,dt
+                                         ,t0
+                                         ,max_i
+                                         ,dummy_val) {
+                                var points = function () {
+                                                var _p15 = method;
+                                                if (_p15.ctor === "RK4") {
+                                                   return A5($Numerical.useRK4,f,dt,t0,start_pt,max_i);
+                                                } else {
+                                                   return A4($Numerical.useEuler,f,dt,start_pt,max_i);
+                                                }
+                                             }();
+                                return scalePoints(points);
                              });
        var out_points =
        Elm.Native.Port.make(_elm).outboundSignal("out_points"
@@ -12789,24 +12936,34 @@ Elm.Controls.make = function (_elm) {
                                                 ,A2($Signal$Extra._op["~"]
                                                    ,A2($Signal$Extra._op["~"]
                                                       ,A2($Signal$Extra._op["~"]
-                                                         ,A2($Signal$Extra._op["<~"],calculatePoints,chooseFunction)
-                                                         ,startingPoint)
+                                                         ,A2($Signal$Extra._op["~"]
+                                                            ,A2($Signal$Extra._op["~"]
+                                                               ,A2($Signal$Extra._op["~"]
+                                                                  ,A2($Signal$Extra._op["<~"]
+                                                                     ,calculatePoints
+                                                                     ,$MyElements.methodChoice.signal)
+                                                                  ,chooseFunction)
+                                                               ,startingPoint)
+                                                            ,$MyElements.delta_time)
+                                                         ,$MyElements.start_time)
                                                       ,$MyElements.iterations)
                                                    ,in_init));
        return _elm.Controls.values = {_op: _op
                                      ,distance3D: distance3D
                                      ,LorenzParams: LorenzParams
+                                     ,rosslerFunction: rosslerFunction
                                      ,lorenzFunction: lorenzFunction
-                                     ,calculateIterations3D: calculateIterations3D
                                      ,getFurthestPoint: getFurthestPoint
+                                     ,scalePoints: scalePoints
                                      ,calculatePoints: calculatePoints
-                                     ,getEvery: getEvery
-                                     ,getEvery$: getEvery$
                                      ,chooseFunction: chooseFunction
                                      ,startingPoint: startingPoint
                                      ,lorenzParams: lorenzParams
+                                     ,br: br
+                                     ,div_style: div_style
                                      ,startPosElement: startPosElement
                                      ,paramsElement: paramsElement
+                                     ,isRK4: isRK4
                                      ,iterationsElement: iterationsElement
                                      ,functionElement: functionElement
                                      ,main: main};

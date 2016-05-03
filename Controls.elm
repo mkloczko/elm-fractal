@@ -1,23 +1,25 @@
 module Controls where
 
 import Signal exposing (..)
-import Signal.Extra exposing ((<~), (~), combine,sampleWhen, keepWhenI)
-import List exposing (sum,map,append)
+import Signal.Extra exposing ((<~), (~), combine, keepThen)
+import List exposing (intersperse, sum,map,append)
 import List
 import Array
 import Array exposing (Array)
 import Graphics.Element exposing (..)
-import Graphics.Collage exposing (..)
+--import Graphics.Collage exposing (..)
 import Graphics.Input.Field exposing (..)
 import Text exposing (fromString)
 
+import Html exposing (Html, div, span, text)
+import Html.Attributes exposing (style)
 import String exposing (toInt)
 import String
 import Trampoline exposing (..)
 
 import MyElements exposing (..)
 import Numerical exposing (..)
-import Point3D exposing (Point3D)
+import Point3D exposing (Point3D, divScalar)
 -- Utility functions
 
 
@@ -42,34 +44,20 @@ type alias LorenzParams ={
     p3 : Float
 }
 
+
+rosslerFunction : LorenzParams -> Point3D -> Point3D
+rosslerFunction {p1,p2,p3} {x,y,z} =
+    let nx = -(y + z)
+        ny = x + (p1*y)
+        nz = p2 + x*z - (p3 * z)
+    in {x=nx,y=ny,z=nz}
+
 lorenzFunction : LorenzParams -> Point3D -> Point3D
-lorenzFunction {p1,p2,p3} {x,y,z} =
+lorenzFunction {p1,p2,p3} {x,y,z} =    
     let nx = p1*(y - x)
         ny = x*(p2 - z) - y
         nz = x*y - p3*z
     in {x=nx,y=ny,z=nz}
-
-
-
-calculateIterations3D : Function3D -> Int -> Int -> Point3D -> List Point3D -> Trampoline (List Point3D) 
-calculateIterations3D function i     max_i pt list = 
-    case max_i == i of
-        False ->
-            let new_pt = euler function pt
-                new_list = new_pt :: list
-            in Continue (\() -> calculateIterations3D function (i+1) max_i new_pt new_list)
-        True -> Done <| List.reverse list
-
---calculateIterations3D : Function3D -> Int -> Int -> Point3D -> List Point3D -> (List Point3D) 
---calculateIterations3D function i     max_i pt list = 
---    case max_i == i of
---        False ->
---            let new_pt = function pt
---                new_list = new_pt :: list
---            in calculateIterations3D function (i+1) max_i new_pt new_list
---        True -> List.reverse list
-
-
 
 --input ports - TO BE DEFINED.
 getFurthestPoint : List Point3D -> Point3D
@@ -80,37 +68,30 @@ getFurthestPoint array =
             else pt1
     in List.foldl getFurthest {x=0,y=0,z=1} array 
 
-
-calculatePoints : Function3D -> Point3D -> Int -> Bool -> List Point3D
-calculatePoints f start_pt max_i dummy_val = 
-    --let points = trampoline <| calculateIterations3D (prepareFunction f 0.005) 0 max_i start_pt []
-    let points = useEuler f 0.005 start_pt max_i
-        max_d  = distance3D {x=0,y=0,z=0} <| getFurthestPoint points
+scalePoints points =
+    let max_d  = distance3D {x=0,y=0,z=0} <| getFurthestPoint points
         d      = max_d / 160
-        divBy d {x,y,z} = {x = x/d, y = y/d, z = z/d}
-    in List.map (divBy d) points
+    in List.map (flip divScalar d) points
 
 
 
+calculatePoints : Method -> Function3D -> Point3D -> Time -> Time -> Int -> Bool -> List Point3D
+calculatePoints method f start_pt dt t0 max_i dummy_val = 
+    --let points = trampoline <| calculateIterations3D (prepareFunction f 0.005) 0 max_i start_pt []
+    --let points = useEuler f 0.005 start_pt max_i
+    let points = case method of
+            RK4 -> useRK4 f dt t0 start_pt max_i
+            Euler -> useEuler f dt start_pt max_i
+    in scalePoints points
 
-getEvery : Int -> List a -> List a
-getEvery n list = trampoline (getEvery' n 0 [] list) 
 
-getEvery' : Int -> Int -> List a -> List a -> Trampoline (List a)
-getEvery' n ix acc list =
-    case list of
-        l::ls -> case n < ix of
-            False ->
-                let new_acc = l::acc
-                in Continue (\() -> getEvery' n 0 new_acc ls)
-            True  -> Continue (\() -> getEvery' n (ix+1) acc ls)
-        []     ->  Done acc
+
 
 --- Ports, to connect with JS ---
 port in_init : Signal Bool
 
 port out_points  : Signal (List Point3D)
-port out_points = calculatePoints <~ chooseFunction ~ startingPoint ~ iterations ~ in_init
+port out_points = calculatePoints <~ methodChoice.signal ~ chooseFunction ~ startingPoint ~ delta_time ~ start_time ~ iterations ~ in_init
 
 --port delta_points : Signal Int
 
@@ -118,6 +99,7 @@ chooseFunction : Signal Function3D
 chooseFunction = 
     let chooseFun what_f lorenzParams = case what_f of
         Lorenz -> lorenzFunction lorenzParams 
+        Rossler -> rosslerFunction lorenzParams
     in chooseFun <~ functionsChoice.signal ~ Signal.dropRepeats lorenzParams 
 
 startingPoint : Signal Point3D
@@ -134,28 +116,58 @@ lorenzParams =
 --------------
 -- ELEMENTS --
 --------------
+br = constant <| Html.br [] []
+
+div_style = style [("box-sizing", "border-box"),("width","25%"),("float","left") ]
+
 
 startPosElement = 
-    let desc = leftAligned <| Text.fromString "Starting position"
-    in  flow down <~ (append [desc] <~ combine [xField, yField, zField])
+    let desc = constant <| span [] [text "Starting position"]
+        x_desc = constant <| text "x:"
+        y_desc = constant <| text "y:"
+        z_desc = constant <| text "z:"
+    in  div [div_style] <~ combine [desc, br, x_desc, xField, br, y_desc, yField, br, z_desc, zField]
 
 paramsElement = 
-    let desc = leftAligned <| Text.fromString "Parameters"
-    in  flow down <~ (append [desc]  <~ combine [p1Field,p2Field,p3Field])
-    
+    let desc = constant <| span [] [text "Function Parameters"]
+        p1_d = constant <| text "p1:"
+        p2_d = constant <| text "p2:"
+        p3_d = constant <| text "p3:"
+    in  div [div_style] <~ combine [desc, br, p1_d, p1Field,br,p2_d, p2Field,br,p3_d, p3Field]
+
+
+
+-- Check whether runge kutta is on.    
+isRK4 : Method -> Bool
+isRK4 method = RK4 == method 
 
 iterationsElement = 
-    let desc = leftAligned <| Text.fromString "Iterations"
-    in  flow down <~ (append [desc] <~ combine [ixField]) 
+    let desc = constant <| span [] [text "Simulation"]
+        ix_d = constant <| text "ix:"
+        dt_d = constant <| text "dt:"
+        t0_d = constant <| text "t_0:"
+        t0_stuff = combine [br, t0_d, t0Field]
+        rest = combine [desc, br, ix_d, ixField, br, dt_d, dtField] 
+        --iffy sig = case sig of
+            --RK4 ->  (rest ++ t0_stuff)
+            --Euler -> rest 
+    in  div [div_style] <~ ((++) <~ rest ~ (keepThen (isRK4 <~ methodChoice.signal) [] t0_stuff))
+
+--methodChoiceSignal : Signal Method
+
+--rest : List [Signal HTML]
+--combine_rest : Signal [List HTML]
+
+--Signal [List Html] -> Signal Method -> Signal [List Html]
+
 
 functionElement = 
-    let desc = leftAligned <| Text.fromString "Chosen function"
-    in  flow down [desc, functionButtons]
+    let desc = constant <| span [] [text "Chosen function"]
+        method_desc = constant <| text "Chosen method"
+    in  div [div_style] <~ combine ([desc,br,method_desc,br] ++ methodRadios) 
      
 
-
-
 main = 
-    let first_col = flow down [functionElement]
-        rest_cols = flow right <~ combine [iterationsElement, paramsElement, startPosElement]
-    in flow right <~ ( append [first_col] <~ combine [rest_cols]) 
+    let first_col = div [] <~ combine [functionElement]
+        rest_cols = div [] <~ combine [iterationsElement, paramsElement, startPosElement]
+    in div [] <~  combine [first_col, rest_cols] 

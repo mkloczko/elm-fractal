@@ -1,8 +1,10 @@
 module Numerical where
-
 import Trampoline exposing (Trampoline (Done, Continue), trampoline)
+import List exposing (map)
 
 import Point3D exposing (Point3D, multScalar, addPoint, divScalar)
+
+
 type alias Time = Float
 
 euler : (Point3D -> Point3D) --The function
@@ -51,7 +53,10 @@ useEuler f dt p0 max_i =
     let numFun = euler (prepareFunction f dt)
     in generate numFun p0 max_i
 
---useRK4 : (Point3D -> Point3D) -> Time -> Time -> Point3D -> Int -> List Point3D
---useRK4 f dt t0 p0 max_i =
---    let numFun = rk (prepareFunction f) dt
---    in 
+useRK4 : (Point3D -> Point3D) -> Time -> Time -> Point3D -> Int -> List Point3D
+useRK4 f dt t0 p0 max_i =
+    let numFun (t,p) = (t, rk4 (prepareFunction f) dt t p)
+        time_n_pts = generate numFun (t0, p0) max_i
+        pts = map snd time_n_pts 
+    in 
+        pts
