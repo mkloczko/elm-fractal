@@ -142,7 +142,8 @@ lorenzParams =
 --------------
 br = constant <| Html.br [] []
 
-div_style = style [("box-sizing", "border-box"),("width","25%"),("float","left") ]
+div_style = style [ ("box-sizing", "border-box"),("width","25%"),("float","left")
+                  , ("padding-left", "5px"), ("padding-right", "5px") ]
 
 
 startPosElement = 
@@ -169,7 +170,7 @@ iterationsElement =
     let desc = constant <| span [] [text "Simulation"]
         ix_d = constant <| text "ix:"
         dt_d = constant <| text "dt:"
-        t0_d = constant <| text "t_0:"
+        t0_d = constant <| text "t0:"
         t0_stuff = combine [br, t0_d, t0Field]
         rest = combine [desc, br, ix_d, ixField, br, dt_d, dtField] 
         --iffy sig = case sig of

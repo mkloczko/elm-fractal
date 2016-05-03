@@ -12520,6 +12520,15 @@ Elm.NumericBox.make = function (_elm) {
                                                      ,_U.list([$Html.text(_p1._1)]));
                                          }
                                          ,vals);
+                         var attribs_style =
+                         _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2"
+                                                                  ,_0: "min-width"
+                                                                  ,_1: "20%"}
+                                                                 ,{ctor: "_Tuple2",_0: "max-width",_1: "40%"}
+                                                                 ,{ctor: "_Tuple2",_0: "padding-left",_1: "5%"}
+                                                                 ,{ctor: "_Tuple2",_0: "padding-right",_1: "5%"}
+                                                                 ,{ctor: "_Tuple2",_0: "margin-left",_1: "5%"}
+                                                                 ,{ctor: "_Tuple2",_0: "margin-right",_1: "5%"}]))]);
                          var listener1 = A3($Html$Events.on
                                            ,"change"
                                            ,$Html$Events.targetValue
@@ -12544,6 +12553,15 @@ Elm.NumericBox.make = function (_elm) {
                       return the_element;
                    });
        var intBox = F5(function (sender,min,max,step,val) {
+                       var attribs_style =
+                       _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2"
+                                                                ,_0: "min-width"
+                                                                ,_1: "20%"}
+                                                               ,{ctor: "_Tuple2",_0: "max-width",_1: "40%"}
+                                                               ,{ctor: "_Tuple2",_0: "padding-left",_1: "5%"}
+                                                               ,{ctor: "_Tuple2",_0: "padding-right",_1: "5%"}
+                                                               ,{ctor: "_Tuple2",_0: "margin-left",_1: "5%"}
+                                                               ,{ctor: "_Tuple2",_0: "margin-right",_1: "5%"}]))]);
                        var listener1 = A3($Html$Events.on
                                          ,"input"
                                          ,$Html$Events.targetValue
@@ -12556,10 +12574,21 @@ Elm.NumericBox.make = function (_elm) {
                                              ,$Html$Attributes.min($Basics.toString(min))
                                              ,$Html$Attributes.max($Basics.toString(max))
                                              ,$Html$Attributes.value($Basics.toString(val))]);
-                       var the_element = A2($Html.input,attribs,_U.list([]));
+                       var the_element = A2($Html.input
+                                           ,A2($Basics._op["++"],attribs,attribs_style)
+                                           ,_U.list([]));
                        return the_element;
                     });
        var floatBox = F5(function (sender,min,max,step,val) {
+                         var attribs_style =
+                         _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2"
+                                                                  ,_0: "min-width"
+                                                                  ,_1: "20%"}
+                                                                 ,{ctor: "_Tuple2",_0: "max-width",_1: "40%"}
+                                                                 ,{ctor: "_Tuple2",_0: "padding-left",_1: "5%"}
+                                                                 ,{ctor: "_Tuple2",_0: "padding-right",_1: "5%"}
+                                                                 ,{ctor: "_Tuple2",_0: "margin-left",_1: "5%"}
+                                                                 ,{ctor: "_Tuple2",_0: "margin-right",_1: "5%"}]))]);
                          var listener1 = A3($Html$Events.on
                                            ,"input"
                                            ,$Html$Events.targetValue
@@ -12572,7 +12601,9 @@ Elm.NumericBox.make = function (_elm) {
                                                ,$Html$Attributes.min($Basics.toString(min))
                                                ,$Html$Attributes.max($Basics.toString(max))
                                                ,$Html$Attributes.value($Basics.toString(val))]);
-                         var the_element = A2($Html.input,attribs,_U.list([]));
+                         var the_element = A2($Html.input
+                                             ,A2($Basics._op["++"],attribs,attribs_style)
+                                             ,_U.list([]));
                          return the_element;
                       });
        return _elm.NumericBox.values = {_op: _op
@@ -12912,7 +12943,9 @@ Elm.Controls.make = function (_elm) {
                                                        ,_0: "box-sizing"
                                                        ,_1: "border-box"}
                                                       ,{ctor: "_Tuple2",_0: "width",_1: "25%"}
-                                                      ,{ctor: "_Tuple2",_0: "float",_1: "left"}]));
+                                                      ,{ctor: "_Tuple2",_0: "float",_1: "left"}
+                                                      ,{ctor: "_Tuple2",_0: "padding-left",_1: "5px"}
+                                                      ,{ctor: "_Tuple2",_0: "padding-right",_1: "5px"}]));
        var br = $Signal.constant(A2($Html.br,_U.list([]),_U.list([])));
        var startPosElement = function () {
                                 var z_desc = $Signal.constant($Html.text("z:"));
@@ -12955,7 +12988,7 @@ Elm.Controls.make = function (_elm) {
                                                                       ,$MyElements.p3Field])));
                            }();
        var iterationsElement = function () {
-                                  var t0_d = $Signal.constant($Html.text("t_0:"));
+                                  var t0_d = $Signal.constant($Html.text("t0:"));
                                   var t0_stuff = $Signal$Extra.combine(_U.list([br
                                                                                ,t0_d
                                                                                ,$MyElements.t0Field]));

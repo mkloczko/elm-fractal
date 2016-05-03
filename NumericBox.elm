@@ -15,8 +15,9 @@ floatBox : (Float -> Message) ->Float -> Float -> Float -> Float -> Html
 floatBox sender min max step val = 
     let
         listener1 = on "input" targetValue (\str -> sender <| Result.withDefault 0.0 <| String.toFloat str )
+        attribs_style = [style [("min-width","20%"), ("max-width","40%"),("padding-left", "5%"), ("padding-right", "5%"), ("margin-left", "5%"), ("margin-right", "5%")]]
         attribs = [listener1, A.step <| toString step, A.type' <| "number", A.min <| toString min, A.max <| toString max, A.value <| toString val]
-        the_element = input (attribs) []
+        the_element = input (attribs ++ attribs_style) []
     in
         the_element
 
@@ -25,8 +26,9 @@ intBox : (Int -> Message) ->Int -> Int -> Int -> Int -> Html
 intBox sender min max step val = 
     let
         listener1 = on "input" targetValue (\str -> sender <| Result.withDefault 0 <| String.toInt str )
+        attribs_style = [style [("min-width","20%"),("max-width","40%"),("padding-left", "5%"), ("padding-right", "5%"), ("margin-left", "5%"), ("margin-right", "5%")]]
         attribs = [listener1, A.step <| toString step, A.type' <| "number", A.min <| toString min, A.max <| toString max, A.value <| toString val]
-        the_element = input (attribs) []
+        the_element = input (attribs ++ attribs_style) []
     in
         the_element
 
@@ -43,6 +45,7 @@ dropdown sender translator vals on_val =
     let
         listener1 = on "change" targetValue (\str -> sender <| translator str)
         attribs   = [listener1]
+        attribs_style = [style [("min-width","20%"),("max-width","40%"),("padding-left", "5%"), ("padding-right", "5%"), ("margin-left", "5%"), ("margin-right", "5%")]]
         options   = List.map (\(v,txt) -> option [A.value v, A.selected <| v == on_val] [text txt]) vals
         the_element = select attribs options
     in the_element

@@ -3,7 +3,7 @@
 	<head>
 		<title>Fractals</title>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<!-- <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"> -->
 		<style>
 			body {
 				font-family: Monospace;
@@ -172,7 +172,7 @@
  				function updateCamera(stuffs) {
  					camera_stuff = stuffs[0]
  					lookat_stuff = stuffs[1]
- 					console.log("HEEY", camera_stuff, lookat_stuff)
+ 					
  					camera.position.x = camera_stuff.x
  					camera.position.y = camera_stuff.y
  					camera.position.z = camera_stuff.z
@@ -180,13 +180,10 @@
  					lookAt.x = lookat_stuff.x
  					lookAt.y = lookat_stuff.y
  					lookAt.z = lookat_stuff.z
- 					console.log("HEEY ?", camera, lookAt)
 
  					camera.lookAt(lookAt)
  					camera.updateMatrixWorld()
 
- 					console.log("HEEY again!", camera)
- 					// camera.x = camera_stuff[]
  				}
  				controls.ports.out_camera_lookat.subscribe(updateCamera)
 				
