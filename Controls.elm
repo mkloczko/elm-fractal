@@ -1,7 +1,7 @@
 module Controls where
 
 import Signal exposing (..)
-import Signal.Extra exposing ((<~), (~), combine, keepThen)
+import Signal.Extra exposing ((<~), (~), combine, keepThen, keepWhen)
 import List exposing (intersperse, sum,map,append)
 import List
 import Array
@@ -23,6 +23,7 @@ import Point3D exposing (Point3D, divScalar)
 -- Utility functions
 
 
+import Time exposing (fps)
 
 -- Model
 
@@ -90,9 +91,32 @@ calculatePoints method f start_pt dt t0 max_i dummy_val =
 --- Ports, to connect with JS ---
 port in_init : Signal Bool
 
+fps_clock = keepWhen in_init 0.0 (fps 60)
+
 port out_points  : Signal (List Point3D)
 port out_points = calculatePoints <~ methodChoice.signal ~ chooseFunction ~ startingPoint ~ delta_time ~ start_time ~ iterations ~ in_init
 
+updater : Time -> (Point3D,Point3D)
+updater dt = ({x = 0, y = 10, z = 20}, {x = 0, y = 30, z = 0})
+
+updater2 : Signal Float
+updater2 =
+    let
+        funny dt state = (dt/16.6 * 0.3) + state
+    in foldp funny 0.0 fps_clock
+
+                --// camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+                --// camera.position.y = 30 + radius * Math.sin( THREE.Math.degToRad( theta ) );
+                --// camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+
+camera1 : Signal Point3D 
+camera1 = let
+    f theta = {x = 100 * sin(theta), y = 30 + 100 * sin(theta), z = 100 * cos(theta) }
+    in f <~ (degrees <~ updater2)
+
+port out_camera_lookat : Signal (Point3D, Point3D)
+--port out_camera_lookat = updater <~ fps_clock
+port out_camera_lookat = (\p1 -> (p1, {x = 0, y = 30, z = 0})) <~ camera1
 --port delta_points : Signal Int
 
 chooseFunction : Signal Function3D

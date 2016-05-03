@@ -6327,6 +6327,175 @@ Elm.Signal.Extra.make = function (_elm) {
                                          ,passiveMap2: passiveMap2
                                          ,withPassive: withPassive};
     };
+Elm.Native.Time = {};
+
+Elm.Native.Time.make = function(localRuntime)
+{
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Time = localRuntime.Native.Time || {};
+	if (localRuntime.Native.Time.values)
+	{
+		return localRuntime.Native.Time.values;
+	}
+
+	var NS = Elm.Native.Signal.make(localRuntime);
+	var Maybe = Elm.Maybe.make(localRuntime);
+
+
+	// FRAMES PER SECOND
+
+	function fpsWhen(desiredFPS, isOn)
+	{
+		var msPerFrame = 1000 / desiredFPS;
+		var ticker = NS.input('fps-' + desiredFPS, null);
+
+		function notifyTicker()
+		{
+			localRuntime.notify(ticker.id, null);
+		}
+
+		function firstArg(x, y)
+		{
+			return x;
+		}
+
+		// input fires either when isOn changes, or when ticker fires.
+		// Its value is a tuple with the current timestamp, and the state of isOn
+		var input = NS.timestamp(A3(NS.map2, F2(firstArg), NS.dropRepeats(isOn), ticker));
+
+		var initialState = {
+			isOn: false,
+			time: localRuntime.timer.programStart,
+			delta: 0
+		};
+
+		var timeoutId;
+
+		function update(input, state)
+		{
+			var currentTime = input._0;
+			var isOn = input._1;
+			var wasOn = state.isOn;
+			var previousTime = state.time;
+
+			if (isOn)
+			{
+				timeoutId = localRuntime.setTimeout(notifyTicker, msPerFrame);
+			}
+			else if (wasOn)
+			{
+				clearTimeout(timeoutId);
+			}
+
+			return {
+				isOn: isOn,
+				time: currentTime,
+				delta: (isOn && !wasOn) ? 0 : currentTime - previousTime
+			};
+		}
+
+		return A2(
+			NS.map,
+			function(state) { return state.delta; },
+			A3(NS.foldp, F2(update), update(input.value, initialState), input)
+		);
+	}
+
+
+	// EVERY
+
+	function every(t)
+	{
+		var ticker = NS.input('every-' + t, null);
+		function tellTime()
+		{
+			localRuntime.notify(ticker.id, null);
+		}
+		var clock = A2(NS.map, fst, NS.timestamp(ticker));
+		setInterval(tellTime, t);
+		return clock;
+	}
+
+
+	function fst(pair)
+	{
+		return pair._0;
+	}
+
+
+	function read(s)
+	{
+		var t = Date.parse(s);
+		return isNaN(t) ? Maybe.Nothing : Maybe.Just(t);
+	}
+
+	return localRuntime.Native.Time.values = {
+		fpsWhen: F2(fpsWhen),
+		every: every,
+		toDate: function(t) { return new Date(t); },
+		read: read
+	};
+};
+
+Elm.Time = Elm.Time || {};
+Elm.Time.make = function (_elm) {
+       "use strict";
+       _elm.Time = _elm.Time || {};
+       if (_elm.Time.values)    return _elm.Time.values;
+       var _U = Elm.Native.Utils.make(_elm),
+       $Basics = Elm.Basics.make(_elm),
+       $Native$Signal = Elm.Native.Signal.make(_elm),
+       $Native$Time = Elm.Native.Time.make(_elm),
+       $Signal = Elm.Signal.make(_elm);
+       var _op = {};
+       var delay = $Native$Signal.delay;
+       var since = F2(function (time,signal) {
+                      var stop = A2($Signal.map
+                                   ,$Basics.always(-1)
+                                   ,A2(delay,time,signal));
+                      var start = A2($Signal.map,$Basics.always(1),signal);
+                      var delaydiff = A3($Signal.foldp
+                                        ,F2(function (x,y) {
+                                           return x + y;
+                                        })
+                                        ,0
+                                        ,A2($Signal.merge,start,stop));
+                      return A2($Signal.map
+                               ,F2(function (x,y) {
+                                  return !_U.eq(x,y);
+                               })(0)
+                               ,delaydiff);
+                   });
+       var timestamp = $Native$Signal.timestamp;
+       var every = $Native$Time.every;
+       var fpsWhen = $Native$Time.fpsWhen;
+       var fps = function (targetFrames) {
+          return A2(fpsWhen,targetFrames,$Signal.constant(true));
+       };
+       var inMilliseconds = function (t) { return t;};
+       var millisecond = 1;
+       var second = 1000 * millisecond;
+       var minute = 60 * second;
+       var hour = 60 * minute;
+       var inHours = function (t) { return t / hour;};
+       var inMinutes = function (t) { return t / minute;};
+       var inSeconds = function (t) { return t / second;};
+       return _elm.Time.values = {_op: _op
+                                 ,millisecond: millisecond
+                                 ,second: second
+                                 ,minute: minute
+                                 ,hour: hour
+                                 ,inMilliseconds: inMilliseconds
+                                 ,inSeconds: inSeconds
+                                 ,inMinutes: inMinutes
+                                 ,inHours: inHours
+                                 ,fps: fps
+                                 ,fpsWhen: fpsWhen
+                                 ,every: every
+                                 ,timestamp: timestamp
+                                 ,delay: delay
+                                 ,since: since};
+    };
 Elm.Native.Array = {};
 Elm.Native.Array.make = function(localRuntime) {
 
@@ -12733,7 +12902,8 @@ Elm.Controls.make = function (_elm) {
        $Point3D = Elm.Point3D.make(_elm),
        $Result = Elm.Result.make(_elm),
        $Signal = Elm.Signal.make(_elm),
-       $Signal$Extra = Elm.Signal.Extra.make(_elm);
+       $Signal$Extra = Elm.Signal.Extra.make(_elm),
+       $Time = Elm.Time.make(_elm);
        var _op = {};
        var isRK4 = function (method) {
           return _U.eq($MyElements.RK4,method);
@@ -12865,12 +13035,48 @@ Elm.Controls.make = function (_elm) {
                                           ,$MyElements.ySignal)
                                        ,$MyElements.zSignal);
                            }();
+       var updater = function (dt) {
+          return {ctor: "_Tuple2"
+                 ,_0: {x: 0,y: 10,z: 20}
+                 ,_1: {x: 0,y: 30,z: 0}};
+       };
        var in_init = Elm.Native.Port.make(_elm).inboundSignal("in_init"
                                                              ,"Bool"
                                                              ,function (v) {
                                                                 return typeof v === "boolean" ? v
                                                                     : _U.badPort("a boolean (true or false)",v);
                                                              });
+       var fps_clock = A3($Signal$Extra.keepWhen
+                         ,in_init
+                         ,0.0
+                         ,$Time.fps(60));
+       var updater2 = function () {
+                         var funny = F2(function (dt,state) {
+                                        return dt / 16.6 * 0.3 + state;
+                                     });
+                         return A3($Signal.foldp,funny,0.0,fps_clock);
+                      }();
+       var camera1 = function () {
+                        var f = function (theta) {
+                           return {x: 100 * $Basics.sin(theta)
+                                  ,y: 30 + 100 * $Basics.sin(theta)
+                                  ,z: 100 * $Basics.cos(theta)};
+                        };
+                        return A2($Signal$Extra._op["<~"]
+                                 ,f
+                                 ,A2($Signal$Extra._op["<~"],$Basics.degrees,updater2));
+                     }();
+       var out_camera_lookat =
+       Elm.Native.Port.make(_elm).outboundSignal("out_camera_lookat"
+                                                ,function (v) {
+                                                   return [{x: v._0.x,y: v._0.y,z: v._0.z}
+                                                          ,{x: v._1.x,y: v._1.y,z: v._1.z}];
+                                                }
+                                                ,A2($Signal$Extra._op["<~"]
+                                                   ,function (p1) {
+                                                      return {ctor: "_Tuple2",_0: p1,_1: {x: 0,y: 30,z: 0}};
+                                                   }
+                                                   ,camera1));
        var lorenzFunction = F2(function (_p1,_p0) {
                                var _p2 = _p1;
                                var _p3 = _p0;
@@ -12982,6 +13188,10 @@ Elm.Controls.make = function (_elm) {
                                      ,getFurthestPoint: getFurthestPoint
                                      ,scalePoints: scalePoints
                                      ,calculatePoints: calculatePoints
+                                     ,fps_clock: fps_clock
+                                     ,updater: updater
+                                     ,updater2: updater2
+                                     ,camera1: camera1
                                      ,chooseFunction: chooseFunction
                                      ,startingPoint: startingPoint
                                      ,lorenzParams: lorenzParams

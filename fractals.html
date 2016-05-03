@@ -52,8 +52,7 @@
 
 			var container, stats;
 			var camera, scene, raycaster, renderer, parentTransform, sphereInter, effect;
-			var anaglyph_on = false;
-			var anaglyph_focal = 125;
+			var lookAt = new THREE.Vector3();
 			var mouse = new THREE.Vector2();
 			var radius = 100, theta = 0;
 			
@@ -152,7 +151,7 @@
 
 				// ELM stuff!
 				function changeGraph(points) { 
-					console.log(points.length)
+					// console.log(points.length)
 					graph.geometry = new THREE.Geometry();
 					points.map( function(pt){
 						var threePt = new THREE.Vector3();
@@ -170,7 +169,27 @@
 				}
 				controls.ports.out_points.subscribe(changeGraph);
  				
+ 				function updateCamera(stuffs) {
+ 					camera_stuff = stuffs[0]
+ 					lookat_stuff = stuffs[1]
+ 					console.log("HEEY", camera_stuff, lookat_stuff)
+ 					camera.position.x = camera_stuff.x
+ 					camera.position.y = camera_stuff.y
+ 					camera.position.z = camera_stuff.z
 
+ 					lookAt.x = lookat_stuff.x
+ 					lookAt.y = lookat_stuff.y
+ 					lookAt.z = lookat_stuff.z
+ 					console.log("HEEY ?", camera, lookAt)
+
+ 					camera.lookAt(lookAt)
+ 					camera.updateMatrixWorld()
+
+ 					console.log("HEEY again!", camera)
+ 					// camera.x = camera_stuff[]
+ 				}
+ 				controls.ports.out_camera_lookat.subscribe(updateCamera)
+				
 				scene.add( parentTransform );
 
 				raycaster = new THREE.Raycaster();
@@ -238,16 +257,15 @@
 
 			function render() {
 
-				theta += 0.1;
 
-				camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				camera.position.y = 30 + radius * Math.sin( THREE.Math.degToRad( theta ) );
-				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
-				var lookAt = new THREE.Vector3();
-				lookAt.y = 30;
-				camera.lookAt( lookAt );
+				// camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				// camera.position.y = 30 + radius * Math.sin( THREE.Math.degToRad( theta ) );
+				// camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+				// var lookAt = new THREE.Vector3();
+				// lookAt.y = 30;
+				// camera.lookAt( lookAt );
 
-				camera.updateMatrixWorld();
+				// camera.updateMatrixWorld();
 
 				// find intersections
 
