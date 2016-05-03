@@ -10076,6 +10076,74 @@ Elm.Json.Decode.make = function (_elm) {
                                         ,value: value
                                         ,customDecoder: customDecoder};
     };
+Elm.Native = Elm.Native || {};
+Elm.Native.Window = {};
+Elm.Native.Window.make = function make(localRuntime) {
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Window = localRuntime.Native.Window || {};
+	if (localRuntime.Native.Window.values)
+	{
+		return localRuntime.Native.Window.values;
+	}
+
+	var NS = Elm.Native.Signal.make(localRuntime);
+	var Tuple2 = Elm.Native.Utils.make(localRuntime).Tuple2;
+
+
+	function getWidth()
+	{
+		return localRuntime.node.clientWidth;
+	}
+
+
+	function getHeight()
+	{
+		if (localRuntime.isFullscreen())
+		{
+			return window.innerHeight;
+		}
+		return localRuntime.node.clientHeight;
+	}
+
+
+	var dimensions = NS.input('Window.dimensions', Tuple2(getWidth(), getHeight()));
+
+
+	function resizeIfNeeded()
+	{
+		// Do not trigger event if the dimensions have not changed.
+		// This should be most of the time.
+		var w = getWidth();
+		var h = getHeight();
+		if (dimensions.value._0 === w && dimensions.value._1 === h)
+		{
+			return;
+		}
+
+		setTimeout(function() {
+			// Check again to see if the dimensions have changed.
+			// It is conceivable that the dimensions have changed
+			// again while some other event was being processed.
+			w = getWidth();
+			h = getHeight();
+			if (dimensions.value._0 === w && dimensions.value._1 === h)
+			{
+				return;
+			}
+			localRuntime.notify(dimensions.id, Tuple2(w, h));
+		}, 0);
+	}
+
+
+	localRuntime.addListener([dimensions.id], window, 'resize', resizeIfNeeded);
+
+
+	return localRuntime.Native.Window.values = {
+		dimensions: dimensions,
+		resizeIfNeeded: resizeIfNeeded
+	};
+};
+
 Elm.Trampoline = Elm.Trampoline || {};
 Elm.Trampoline.make = function (_elm) {
        "use strict";
@@ -10101,6 +10169,24 @@ Elm.Trampoline.make = function (_elm) {
                                        ,trampoline: trampoline
                                        ,Done: Done
                                        ,Continue: Continue};
+    };
+Elm.Window = Elm.Window || {};
+Elm.Window.make = function (_elm) {
+       "use strict";
+       _elm.Window = _elm.Window || {};
+       if (_elm.Window.values)    return _elm.Window.values;
+       var _U = Elm.Native.Utils.make(_elm),
+       $Basics = Elm.Basics.make(_elm),
+       $Native$Window = Elm.Native.Window.make(_elm),
+       $Signal = Elm.Signal.make(_elm);
+       var _op = {};
+       var dimensions = $Native$Window.dimensions;
+       var width = A2($Signal.map,$Basics.fst,dimensions);
+       var height = A2($Signal.map,$Basics.snd,dimensions);
+       return _elm.Window.values = {_op: _op
+                                   ,dimensions: dimensions
+                                   ,width: width
+                                   ,height: height};
     };
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
@@ -12934,18 +13020,69 @@ Elm.Controls.make = function (_elm) {
        $Result = Elm.Result.make(_elm),
        $Signal = Elm.Signal.make(_elm),
        $Signal$Extra = Elm.Signal.Extra.make(_elm),
-       $Time = Elm.Time.make(_elm);
+       $Time = Elm.Time.make(_elm),
+       $Window = Elm.Window.make(_elm);
        var _op = {};
+       var combine2 = function (ls) {
+          return $Signal$Extra.combine(A2($List.map
+                                         ,$Signal$Extra.combine
+                                         ,ls));
+       };
+       var div_style2 =
+       $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
+                                       ,_0: "box-sizing"
+                                       ,_1: "border-box"}
+                                      ,{ctor: "_Tuple2",_0: "width",_1: "50%"}
+                                      ,{ctor: "_Tuple2",_0: "float",_1: "left"}
+                                      ,{ctor: "_Tuple2",_0: "padding-left",_1: "5px"}
+                                      ,{ctor: "_Tuple2",_0: "padding-right",_1: "5px"}]));
+       var div_style1 =
+       $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
+                                       ,_0: "box-sizing"
+                                       ,_1: "border-box"}
+                                      ,{ctor: "_Tuple2",_0: "width",_1: "25%"}
+                                      ,{ctor: "_Tuple2",_0: "float",_1: "left"}
+                                      ,{ctor: "_Tuple2",_0: "padding-left",_1: "5px"}
+                                      ,{ctor: "_Tuple2",_0: "padding-right",_1: "5px"}]));
+       var positioning = F3(function (width,first_row,second_row) {
+                            if (_U.cmp(width,160 * 4) > 0) {
+                               var glob_style =
+                               $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
+                                                               ,_0: "max-width"
+                                                               ,_1: "720px"}]));
+                               var divs = A2($List.map
+                                            ,$Html.div(_U.list([div_style1]))
+                                            ,$List.concat(_U.list([first_row,second_row])));
+                               return A2($Html.div,_U.list([glob_style]),divs);
+                            } else {
+                               var glob_style =
+                               $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
+                                                               ,_0: "max-width"
+                                                               ,_1: "400px"}
+                                                              ,{ctor: "_Tuple2",_0: "min-width",_1: "340px"}]));
+                               var own_style = $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
+                                                                               ,_0: "overflow"
+                                                                               ,_1: "auto"}
+                                                                              ,{ctor: "_Tuple2",_0: "width",_1: "100%"}
+                                                                              ,{ctor: "_Tuple2",_0: "height",_1: "50%"}
+                                                                              ,{ctor: "_Tuple2",_0: "margin-top",_1: "5px"}
+                                                                              ,{ctor: "_Tuple2",_0: "margin-bottom",_1: "5px"}]));
+                               var seconds = A2($List.map
+                                               ,$Html.div(_U.list([div_style2]))
+                                               ,second_row);
+                               var firsties = A2($List.map
+                                                ,$Html.div(_U.list([div_style2]))
+                                                ,first_row);
+                               return A2($Html.div
+                                        ,_U.list([glob_style])
+                                        ,_U.list([$Html.text($Basics.toString(width))
+                                                 ,A2($Html.div,_U.list([own_style]),firsties)
+                                                 ,A2($Html.div,_U.list([own_style]),seconds)]));
+                            }
+                         });
        var isRK4 = function (method) {
           return _U.eq($MyElements.RK4,method);
        };
-       var div_style = $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
-                                                       ,_0: "box-sizing"
-                                                       ,_1: "border-box"}
-                                                      ,{ctor: "_Tuple2",_0: "width",_1: "25%"}
-                                                      ,{ctor: "_Tuple2",_0: "float",_1: "left"}
-                                                      ,{ctor: "_Tuple2",_0: "padding-left",_1: "5px"}
-                                                      ,{ctor: "_Tuple2",_0: "padding-right",_1: "5px"}]));
        var br = $Signal.constant(A2($Html.br,_U.list([]),_U.list([])));
        var startPosElement = function () {
                                 var z_desc = $Signal.constant($Html.text("z:"));
@@ -12954,18 +13091,16 @@ Elm.Controls.make = function (_elm) {
                                 var desc = $Signal.constant(A2($Html.span
                                                               ,_U.list([])
                                                               ,_U.list([$Html.text("Starting position")])));
-                                return A2($Signal$Extra._op["<~"]
-                                         ,$Html.div(_U.list([div_style]))
-                                         ,$Signal$Extra.combine(_U.list([desc
-                                                                        ,br
-                                                                        ,x_desc
-                                                                        ,$MyElements.xField
-                                                                        ,br
-                                                                        ,y_desc
-                                                                        ,$MyElements.yField
-                                                                        ,br
-                                                                        ,z_desc
-                                                                        ,$MyElements.zField])));
+                                return $Signal$Extra.combine(_U.list([desc
+                                                                     ,br
+                                                                     ,x_desc
+                                                                     ,$MyElements.xField
+                                                                     ,br
+                                                                     ,y_desc
+                                                                     ,$MyElements.yField
+                                                                     ,br
+                                                                     ,z_desc
+                                                                     ,$MyElements.zField]));
                              }();
        var paramsElement = function () {
                               var p3_d = $Signal.constant($Html.text("p3:"));
@@ -12974,18 +13109,16 @@ Elm.Controls.make = function (_elm) {
                               var desc = $Signal.constant(A2($Html.span
                                                             ,_U.list([])
                                                             ,_U.list([$Html.text("Function Parameters")])));
-                              return A2($Signal$Extra._op["<~"]
-                                       ,$Html.div(_U.list([div_style]))
-                                       ,$Signal$Extra.combine(_U.list([desc
-                                                                      ,br
-                                                                      ,p1_d
-                                                                      ,$MyElements.p1Field
-                                                                      ,br
-                                                                      ,p2_d
-                                                                      ,$MyElements.p2Field
-                                                                      ,br
-                                                                      ,p3_d
-                                                                      ,$MyElements.p3Field])));
+                              return $Signal$Extra.combine(_U.list([desc
+                                                                   ,br
+                                                                   ,p1_d
+                                                                   ,$MyElements.p1Field
+                                                                   ,br
+                                                                   ,p2_d
+                                                                   ,$MyElements.p2Field
+                                                                   ,br
+                                                                   ,p3_d
+                                                                   ,$MyElements.p3Field]));
                            }();
        var iterationsElement = function () {
                                   var t0_d = $Signal.constant($Html.text("t0:"));
@@ -13004,49 +13137,43 @@ Elm.Controls.make = function (_elm) {
                                                                            ,br
                                                                            ,dt_d
                                                                            ,$MyElements.dtField]));
-                                  return A2($Signal$Extra._op["<~"]
-                                           ,$Html.div(_U.list([div_style]))
-                                           ,A2($Signal$Extra._op["~"]
+                                  return A2($Signal$Extra._op["~"]
+                                           ,A2($Signal$Extra._op["<~"]
+                                              ,F2(function (x,y) {
+                                                 return A2($Basics._op["++"],x,y);
+                                              })
+                                              ,rest)
+                                           ,A3($Signal$Extra.keepThen
                                               ,A2($Signal$Extra._op["<~"]
-                                                 ,F2(function (x,y) {
-                                                    return A2($Basics._op["++"],x,y);
-                                                 })
-                                                 ,rest)
-                                              ,A3($Signal$Extra.keepThen
-                                                 ,A2($Signal$Extra._op["<~"]
-                                                    ,isRK4
-                                                    ,$MyElements.methodChoice.signal)
-                                                 ,_U.list([])
-                                                 ,t0_stuff)));
+                                                 ,isRK4
+                                                 ,$MyElements.methodChoice.signal)
+                                              ,_U.list([])
+                                              ,t0_stuff));
                                }();
        var functionElement = function () {
                                 var method_desc = $Signal.constant($Html.text("Chosen method"));
                                 var desc = $Signal.constant(A2($Html.span
                                                               ,_U.list([])
                                                               ,_U.list([$Html.text("Chosen function")])));
-                                return A2($Signal$Extra._op["<~"]
-                                         ,$Html.div(_U.list([div_style]))
-                                         ,$Signal$Extra.combine(A2($Basics._op["++"]
-                                                                  ,_U.list([desc
-                                                                           ,br
-                                                                           ,$MyElements.functionsDropdown
-                                                                           ,br
-                                                                           ,method_desc
-                                                                           ,br])
-                                                                  ,$MyElements.methodRadios)));
+                                return $Signal$Extra.combine(A2($Basics._op["++"]
+                                                               ,_U.list([desc
+                                                                        ,br
+                                                                        ,$MyElements.functionsDropdown
+                                                                        ,br
+                                                                        ,method_desc
+                                                                        ,br])
+                                                               ,$MyElements.methodRadios));
                              }();
        var main = function () {
-                     var rest_cols = A2($Signal$Extra._op["<~"]
-                                       ,$Html.div(_U.list([]))
-                                       ,$Signal$Extra.combine(_U.list([iterationsElement
-                                                                      ,paramsElement
-                                                                      ,startPosElement])));
-                     var first_col = A2($Signal$Extra._op["<~"]
-                                       ,$Html.div(_U.list([]))
-                                       ,$Signal$Extra.combine(_U.list([functionElement])));
-                     return A2($Signal$Extra._op["<~"]
-                              ,$Html.div(_U.list([]))
-                              ,$Signal$Extra.combine(_U.list([first_col,rest_cols])));
+                     var rest_cols = $Signal$Extra.combine(_U.list([paramsElement
+                                                                   ,startPosElement]));
+                     var first_cols = $Signal$Extra.combine(_U.list([functionElement
+                                                                    ,iterationsElement]));
+                     return A2($Signal$Extra._op["~"]
+                              ,A2($Signal$Extra._op["~"]
+                                 ,A2($Signal$Extra._op["<~"],positioning,$Window.width)
+                                 ,first_cols)
+                              ,rest_cols);
                   }();
        var lorenzParams = function () {
                              var createLorenz = F3(function (el1,el2,el3) {
@@ -13229,11 +13356,14 @@ Elm.Controls.make = function (_elm) {
                                      ,startingPoint: startingPoint
                                      ,lorenzParams: lorenzParams
                                      ,br: br
-                                     ,div_style: div_style
                                      ,startPosElement: startPosElement
                                      ,paramsElement: paramsElement
                                      ,isRK4: isRK4
                                      ,iterationsElement: iterationsElement
                                      ,functionElement: functionElement
+                                     ,div_style1: div_style1
+                                     ,div_style2: div_style2
+                                     ,positioning: positioning
+                                     ,combine2: combine2
                                      ,main: main};
     };

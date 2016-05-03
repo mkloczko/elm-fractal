@@ -1,8 +1,8 @@
 module Controls where
 
-import Signal exposing (..)
+import Signal exposing (Signal, constant,foldp)
 import Signal.Extra exposing ((<~), (~), combine, keepThen, keepWhen)
-import List exposing (intersperse, sum,map,append)
+import List exposing (intersperse, sum,map,append, concat)
 import List
 import Array
 import Array exposing (Array)
@@ -11,11 +11,12 @@ import Graphics.Element exposing (..)
 import Graphics.Input.Field exposing (..)
 import Text exposing (fromString)
 
-import Html exposing (Html, div, span, text)
+import Html exposing (Attribute, Html, div, span, text)
 import Html.Attributes exposing (style)
 import String exposing (toInt)
 import String
 import Trampoline exposing (..)
+import Window 
 
 import MyElements exposing (..)
 import Numerical exposing (..)
@@ -142,23 +143,22 @@ lorenzParams =
 --------------
 br = constant <| Html.br [] []
 
-div_style = style [ ("box-sizing", "border-box"),("width","25%"),("float","left")
-                  , ("padding-left", "5px"), ("padding-right", "5px") ]
 
-
+startPosElement : Signal (List Html) 
 startPosElement = 
     let desc = constant <| span [] [text "Starting position"]
         x_desc = constant <| text "x:"
         y_desc = constant <| text "y:"
         z_desc = constant <| text "z:"
-    in  div [div_style] <~ combine [desc, br, x_desc, xField, br, y_desc, yField, br, z_desc, zField]
+    in  combine [desc, br, x_desc, xField, br, y_desc, yField, br, z_desc, zField]
 
+paramsElement : Signal (List Html) 
 paramsElement = 
     let desc = constant <| span [] [text "Function Parameters"]
         p1_d = constant <| text "p1:"
         p2_d = constant <| text "p2:"
         p3_d = constant <| text "p3:"
-    in  div [div_style] <~ combine [desc, br, p1_d, p1Field,br,p2_d, p2Field,br,p3_d, p3Field]
+    in  combine [desc, br, p1_d, p1Field,br,p2_d, p2Field,br,p3_d, p3Field]
 
 
 
@@ -166,6 +166,7 @@ paramsElement =
 isRK4 : Method -> Bool
 isRK4 method = RK4 == method 
 
+iterationsElement : Signal (List Html) 
 iterationsElement = 
     let desc = constant <| span [] [text "Simulation"]
         ix_d = constant <| text "ix:"
@@ -176,7 +177,7 @@ iterationsElement =
         --iffy sig = case sig of
             --RK4 ->  (rest ++ t0_stuff)
             --Euler -> rest 
-    in  div [div_style] <~ ((++) <~ rest ~ (keepThen (isRK4 <~ methodChoice.signal) [] t0_stuff))
+    in  (++) <~ rest ~ (keepThen (isRK4 <~ methodChoice.signal) [] t0_stuff)
 
 --methodChoiceSignal : Signal Method
 
@@ -186,13 +187,37 @@ iterationsElement =
 --Signal [List Html] -> Signal Method -> Signal [List Html]
 
 
+functionElement : Signal (List Html) 
 functionElement = 
     let desc = constant <| span [] [text "Chosen function"]
         method_desc = constant <| text "Chosen method"
-    in  div [div_style] <~ combine ([desc,br,functionsDropdown, br, method_desc,br] ++ methodRadios) 
+    in  combine ([desc,br,functionsDropdown, br, method_desc,br] ++ methodRadios) 
      
 
+div_style1 = style [ ("box-sizing", "border-box"),("width","25%"),("float","left")
+                  , ("padding-left", "5px"), ("padding-right", "5px") ]
+
+div_style2 = style [ ("box-sizing", "border-box"),("width","50%"),("float","left")
+                  , ("padding-left", "5px"), ("padding-right", "5px") ]
+
+positioning : Int -> List (List Html) -> List (List Html) -> Html
+positioning width first_row second_row = 
+    if width > 160*4 then
+        let divs = map (div [div_style1]) <| concat [first_row, second_row] --Divs are next to each other
+            glob_style = style [("max-width","720px")]
+        in div [glob_style] divs
+    else 
+        let firsties = map (div [div_style2]) first_row
+            seconds  = map (div [div_style2]) second_row
+            own_style = style [ ("overflow", "auto"),("width", "100%"), ("height","50%")
+                              , ("margin-top", "5px"), ("margin-bottom", "5px")]
+            glob_style = style [("max-width", "400px"), ("min-width", "340px")]
+        in  div [glob_style] [text <| toString width,div [own_style] firsties, div [own_style] seconds]
+
+combine2 : List (List (Signal a)) -> Signal (List (List a))
+combine2 ls = combine <| map combine ls
+
 main = 
-    let first_col = div [] <~ combine [functionElement]
-        rest_cols = div [] <~ combine [iterationsElement, paramsElement, startPosElement]
-    in div [] <~  combine [first_col, rest_cols] 
+    let first_cols = combine [functionElement, iterationsElement]
+        rest_cols = combine [paramsElement, startPosElement]
+    in positioning <~ Window.width ~ first_cols ~ rest_cols
