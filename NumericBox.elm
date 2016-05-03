@@ -38,11 +38,11 @@ radio sender val is_on=
         the_element = input (attribs) []
     in the_element 
 
-dropdown : (String -> Message) -> List (String, String) -> Html
-dropdown sender vals =
+dropdown : (a -> Message) -> (String -> a) -> List (String, String) -> String -> Html
+dropdown sender translator vals on_val =
     let
-        listener1 = on "change" targetValue (\str -> sender str)
+        listener1 = on "change" targetValue (\str -> sender <| translator str)
         attribs   = [listener1]
-        options   = List.map (\(v,txt) -> option [A.value v] [text txt]) vals
+        options   = List.map (\(v,txt) -> option [A.value v, A.selected <| v == on_val] [text txt]) vals
         the_element = select attribs options
     in the_element

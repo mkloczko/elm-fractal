@@ -164,7 +164,7 @@ iterationsElement =
 functionElement = 
     let desc = constant <| span [] [text "Chosen function"]
         method_desc = constant <| text "Chosen method"
-    in  div [div_style] <~ combine ([desc,br,method_desc,br] ++ methodRadios) 
+    in  div [div_style] <~ combine ([desc,br,functionsDropdown, br, method_desc,br] ++ methodRadios) 
      
 
 main = 

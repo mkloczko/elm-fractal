@@ -61,9 +61,21 @@ type Functions = Lorenz | Rossler
 functionsChoice : Mailbox Functions
 functionsChoice = mailbox Lorenz
 
-functionButtons = dropDown (Signal.message functionsChoice.address)
-    [ ("Lorenz", Lorenz)
-    ]
+funToText : String -> Functions
+funToText str = case str of
+    "Lorenz"  -> Lorenz
+    "Rossler" -> Rossler
+    _         -> Lorenz
+
+functionsDropdown = 
+    let
+        sender = Signal.message functionsChoice.address 
+        opts = [("Lorenz","Lorenz"), ("Rossler","Rossler")]
+    in dropdown sender funToText opts <~ (toString <~ functionsChoice.signal)
+
+--functionButtons = dropDown (Signal.message functionsChoice.address)
+--    [ ("Lorenz", Lorenz)
+--    ]
 
 --- Choose derivatation method --- 
 

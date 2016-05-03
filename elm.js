@@ -12340,12 +12340,14 @@ Elm.NumericBox.make = function (_elm) {
        $Signal = Elm.Signal.make(_elm),
        $String = Elm.String.make(_elm);
        var _op = {};
-       var dropdown = F2(function (sender,vals) {
+       var dropdown = F4(function (sender,translator,vals,on_val) {
                          var options = A2($List.map
                                          ,function (_p0) {
                                             var _p1 = _p0;
+                                            var _p2 = _p1._0;
                                             return A2($Html.option
-                                                     ,_U.list([$Html$Attributes.value(_p1._0)])
+                                                     ,_U.list([$Html$Attributes.value(_p2)
+                                                              ,$Html$Attributes.selected(_U.eq(_p2,on_val))])
                                                      ,_U.list([$Html.text(_p1._1)]));
                                          }
                                          ,vals);
@@ -12353,7 +12355,7 @@ Elm.NumericBox.make = function (_elm) {
                                            ,"change"
                                            ,$Html$Events.targetValue
                                            ,function (str) {
-                                              return sender(str);
+                                              return sender(translator(str));
                                            });
                          var attribs = _U.list([listener1]);
                          var the_element = A2($Html.select,attribs,options);
@@ -12363,7 +12365,7 @@ Elm.NumericBox.make = function (_elm) {
                       var listener1 = A3($Html$Events.on
                                         ,"change"
                                         ,$Html$Events.targetChecked
-                                        ,function (_p2) {
+                                        ,function (_p3) {
                                            return sender(val);
                                         });
                       var attribs = _U.list([listener1
@@ -12418,7 +12420,6 @@ Elm.MyElements.make = function (_elm) {
        var _U = Elm.Native.Utils.make(_elm),
        $Basics = Elm.Basics.make(_elm),
        $Debug = Elm.Debug.make(_elm),
-       $Graphics$Input = Elm.Graphics.Input.make(_elm),
        $Html = Elm.Html.make(_elm),
        $List = Elm.List.make(_elm),
        $Maybe = Elm.Maybe.make(_elm),
@@ -12462,9 +12463,28 @@ Elm.MyElements.make = function (_elm) {
        $Signal$Extra.switchSample(A2($Signal$Extra._op["<~"]
                                     ,isRossler
                                     ,functionsChoice.signal));
-       var functionButtons = A2($Graphics$Input.dropDown
-                               ,$Signal.message(functionsChoice.address)
-                               ,_U.list([{ctor: "_Tuple2",_0: "Lorenz",_1: Lorenz}]));
+       var funToText = function (str) {
+          var _p0 = str;
+          switch (_p0)
+          {
+            case "Lorenz":
+              return Lorenz;
+            case "Rossler":
+              return Rossler;
+            default:
+              return Lorenz;
+          }
+       };
+       var functionsDropdown = function () {
+                                  var opts = _U.list([{ctor: "_Tuple2",_0: "Lorenz",_1: "Lorenz"}
+                                                     ,{ctor: "_Tuple2",_0: "Rossler",_1: "Rossler"}]);
+                                  var sender = $Signal.message(functionsChoice.address);
+                                  return A2($Signal$Extra._op["<~"]
+                                           ,A3($NumericBox.dropdown,sender,funToText,opts)
+                                           ,A2($Signal$Extra._op["<~"]
+                                              ,$Basics.toString
+                                              ,functionsChoice.signal));
+                               }();
        var floatSignalBox = F4(function (min,max,step,val) {
                                var the_mailbox = $Signal.mailbox(val);
                                var the_element = A2($Signal$Extra._op["<~"]
@@ -12476,50 +12496,50 @@ Elm.MyElements.make = function (_elm) {
                                                    ,the_mailbox.signal);
                                return {ctor: "_Tuple2",_0: the_mailbox.signal,_1: the_element};
                             });
-       var _p0 = A4(floatSignalBox,0,2,5.0e-4,5.0e-3);
-       var dte_time = _p0._0;
-       var dteField = _p0._1;
-       var _p1 = A4(floatSignalBox,0,2,5.0e-4,5.0e-2);
-       var dtrk_time = _p1._0;
-       var dtrkField = _p1._1;
+       var _p1 = A4(floatSignalBox,0,2,5.0e-4,5.0e-3);
+       var dte_time = _p1._0;
+       var dteField = _p1._1;
+       var _p2 = A4(floatSignalBox,0,2,5.0e-4,5.0e-2);
+       var dtrk_time = _p2._0;
+       var dtrkField = _p2._1;
        var delta_time = A2(switchRK4Euler,dtrk_time,dte_time);
        var dtField = A2(switchRK4Euler,dtrkField,dteField);
-       var _p2 = A4(floatSignalBox,0,5,5.0e-2,0.5);
-       var start_time = _p2._0;
-       var t0Field = _p2._1;
-       var _p3 = A4(floatSignalBox,-1,100,5.0e-4,10);
-       var pl1 = _p3._0;
-       var pl1Field = _p3._1;
-       var _p4 = A4(floatSignalBox,-1,100,5.0e-4,28);
-       var pl2 = _p4._0;
-       var pl2Field = _p4._1;
-       var _p5 = A4(floatSignalBox,-1,100,5.0e-4,2.66);
-       var pl3 = _p5._0;
-       var pl3Field = _p5._1;
-       var _p6 = A4(floatSignalBox,-1,100,5.0e-4,0.2);
-       var pr1 = _p6._0;
-       var pr1Field = _p6._1;
+       var _p3 = A4(floatSignalBox,0,5,5.0e-2,0.5);
+       var start_time = _p3._0;
+       var t0Field = _p3._1;
+       var _p4 = A4(floatSignalBox,-1,100,5.0e-4,10);
+       var pl1 = _p4._0;
+       var pl1Field = _p4._1;
+       var _p5 = A4(floatSignalBox,-1,100,5.0e-4,28);
+       var pl2 = _p5._0;
+       var pl2Field = _p5._1;
+       var _p6 = A4(floatSignalBox,-1,100,5.0e-4,2.66);
+       var pl3 = _p6._0;
+       var pl3Field = _p6._1;
+       var _p7 = A4(floatSignalBox,-1,100,5.0e-4,0.2);
+       var pr1 = _p7._0;
+       var pr1Field = _p7._1;
        var p1 = A2(switchRosslerLorenz,pr1,pl1);
        var p1Field = A2(switchRosslerLorenz,pr1Field,pl1Field);
-       var _p7 = A4(floatSignalBox,-1,100,5.0e-4,0.2);
-       var pr2 = _p7._0;
-       var pr2Field = _p7._1;
+       var _p8 = A4(floatSignalBox,-1,100,5.0e-4,0.2);
+       var pr2 = _p8._0;
+       var pr2Field = _p8._1;
        var p2 = A2(switchRosslerLorenz,pr2,pl2);
        var p2Field = A2(switchRosslerLorenz,pr2Field,pl2Field);
-       var _p8 = A4(floatSignalBox,-1,100,5.0e-4,5.7);
-       var pr3 = _p8._0;
-       var pr3Field = _p8._1;
+       var _p9 = A4(floatSignalBox,-1,100,5.0e-4,5.7);
+       var pr3 = _p9._0;
+       var pr3Field = _p9._1;
        var p3 = A2(switchRosslerLorenz,pr3,pl3);
        var p3Field = A2(switchRosslerLorenz,pr3Field,pl3Field);
-       var _p9 = A4(floatSignalBox,-100,100,0.2,1);
-       var xSignal = _p9._0;
-       var xField = _p9._1;
        var _p10 = A4(floatSignalBox,-100,100,0.2,1);
-       var ySignal = _p10._0;
-       var yField = _p10._1;
+       var xSignal = _p10._0;
+       var xField = _p10._1;
        var _p11 = A4(floatSignalBox,-100,100,0.2,1);
-       var zSignal = _p11._0;
-       var zField = _p11._1;
+       var ySignal = _p11._0;
+       var yField = _p11._1;
+       var _p12 = A4(floatSignalBox,-100,100,0.2,1);
+       var zSignal = _p12._0;
+       var zField = _p12._1;
        var intSignalBox = F4(function (min,max,step,val) {
                              var the_mailbox = $Signal.mailbox(val);
                              var the_element = A2($Signal$Extra._op["<~"]
@@ -12531,9 +12551,9 @@ Elm.MyElements.make = function (_elm) {
                                                  ,the_mailbox.signal);
                              return {ctor: "_Tuple2",_0: the_mailbox.signal,_1: the_element};
                           });
-       var _p12 = A4(intSignalBox,0,100000,100,10000);
-       var iterations = _p12._0;
-       var ixField = _p12._1;
+       var _p13 = A4(intSignalBox,0,100000,100,10000);
+       var iterations = _p13._0;
+       var ixField = _p13._1;
        return _elm.MyElements.values = {_op: _op
                                        ,intSignalBox: intSignalBox
                                        ,floatSignalBox: floatSignalBox
@@ -12566,7 +12586,8 @@ Elm.MyElements.make = function (_elm) {
                                        ,Lorenz: Lorenz
                                        ,Rossler: Rossler
                                        ,functionsChoice: functionsChoice
-                                       ,functionButtons: functionButtons
+                                       ,funToText: funToText
+                                       ,functionsDropdown: functionsDropdown
                                        ,Euler: Euler
                                        ,RK4: RK4
                                        ,methodChoice: methodChoice
@@ -12803,7 +12824,12 @@ Elm.Controls.make = function (_elm) {
                                 return A2($Signal$Extra._op["<~"]
                                          ,$Html.div(_U.list([div_style]))
                                          ,$Signal$Extra.combine(A2($Basics._op["++"]
-                                                                  ,_U.list([desc,br,method_desc,br])
+                                                                  ,_U.list([desc
+                                                                           ,br
+                                                                           ,$MyElements.functionsDropdown
+                                                                           ,br
+                                                                           ,method_desc
+                                                                           ,br])
                                                                   ,$MyElements.methodRadios)));
                              }();
        var main = function () {
