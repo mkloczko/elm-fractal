@@ -1,6 +1,6 @@
 module Controls where
 
-import Signal exposing (Signal, constant,foldp)
+import Signal exposing (Mailbox, mailbox, Signal, constant,foldp)
 import Signal.Extra exposing ((<~), (~), combine, keepThen, keepWhen)
 import List exposing (intersperse, sum,map,append, concat)
 import List
@@ -12,11 +12,13 @@ import Graphics.Input.Field exposing (..)
 import Text exposing (fromString)
 
 import Html exposing (Attribute, Html, div, span, text)
-import Html.Attributes exposing (style)
+import Html.Attributes exposing (id, style, tabindex)
+import Html.Events exposing (onFocus, onBlur)
 import String exposing (toInt)
 import String
 import Trampoline exposing (..)
 import Window 
+import Mouse
 
 import MyElements exposing (..)
 import Numerical exposing (..)
@@ -91,6 +93,11 @@ calculatePoints method f start_pt dt t0 max_i dummy_val =
 
 --- Ports, to connect with JS ---
 port in_init : Signal Bool
+port in_focus : Signal Bool
+
+controllerFocus : Mailbox Bool
+controllerFocus = mailbox True
+
 
 fps_clock = keepWhen in_init 0.0 (fps 60)
 
@@ -112,8 +119,12 @@ updater2 =
 
 camera1 : Signal Point3D 
 camera1 = let
-    f theta = {x = 100 * sin(theta), y = 30 + 100 * sin(theta), z = 100 * cos(theta) }
-    in f <~ (degrees <~ updater2)
+    f theta bool = if not bool then {x = 100 * sin(theta), y = 30 + 100 * sin(theta), z = 100 * cos(theta) }
+        else {x = 100, y = 30, z = 100}
+    in f <~ (degrees <~ updater2) ~ in_focus
+
+
+
 
 port out_camera_lookat : Signal (Point3D, Point3D)
 --port out_camera_lookat = updater <~ fps_clock
@@ -200,19 +211,20 @@ div_style1 = style [ ("box-sizing", "border-box"),("width","25%"),("float","left
 div_style2 = style [ ("box-sizing", "border-box"),("width","50%"),("float","left")
                   , ("padding-left", "5px"), ("padding-right", "5px") ]
 
+
 positioning : Int -> List (List Html) -> List (List Html) -> Html
 positioning width first_row second_row = 
     if width > 160*4 then
         let divs = map (div [div_style1]) <| concat [first_row, second_row] --Divs are next to each other
             glob_style = style [("max-width","720px")]
-        in div [glob_style] divs
+        in div [glob_style,id "controls"] divs
     else 
         let firsties = map (div [div_style2]) first_row
             seconds  = map (div [div_style2]) second_row
             own_style = style [ ("overflow", "auto"),("width", "100%"), ("height","50%")
                               , ("margin-top", "5px"), ("margin-bottom", "5px")]
             glob_style = style [("max-width", "400px"), ("min-width", "340px")]
-        in  div [glob_style] [text <| toString width,div [own_style] firsties, div [own_style] seconds]
+        in  div [glob_style, id "controls"] [text <| toString width,div [own_style] firsties, div [own_style] seconds]
 
 combine2 : List (List (Signal a)) -> Signal (List (List a))
 combine2 ls = combine <| map combine ls

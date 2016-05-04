@@ -17,12 +17,20 @@
 			}
 			#controls{
 				position : absolute;
-				margin-left: 5%;
-				margin-right: 5%;
+
+				left: 0;
+				right: 0;
+				margin-left: auto;
+				margin-right: auto;
+				text-align: center;
+				display: block;
+
 				bottom   : 10%;
-				left : 15%;
-				width : 60%;
+				/*width : 60%;*/
+				/*max-width : 760px ;*/
 				color : #f0ff00;
+				background-color: rgba(120,120,120,0.5);
+				border-radius: 15px;
 			}
 		</style>
 	</head>
@@ -40,11 +48,9 @@
 		</script>
 
 
-		<div id="renderer">
-			<center><div id="controls">
-				<p>  
-				</p>
-				</div></center>
+		<div tabindex="2" id="renderer"  onfocus="rendererFocus()" onblur="rendererBlur()">
+			<div tabindex="1" id="controls">
+				</div>
 		</div>
 
 
@@ -56,12 +62,22 @@
 			var mouse = new THREE.Vector2();
 			var radius = 100, theta = 0;
 			
+			var controls;
+
 			var currentIntersected;
 
 			init();
 			animate();
 
+			function rendererFocus(){
+				console.log("Focusy focus!")
+				controls.ports.in_focus.send(true);
+			}
 
+			function rendererBlur(){
+				console.log("Blury blur!")
+				controls.ports.in_focus.send(false);
+			}
 
 			function init() {
 
@@ -124,8 +140,8 @@
 				}
 
 
-				var div = document.getElementById('controls');
-				controls = Elm.embed(Elm.Controls, div, {in_init: false });
+				var div = document.getElementById('renderer');
+				controls = Elm.embed(Elm.Controls, div, {in_init: false, in_focus:false });
 				// controls = Elm.worker(Elm.Controls, {iterations:1000});
 				var material = new THREE.LineBasicMaterial({
 					color: 0xacbd00

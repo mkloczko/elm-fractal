@@ -10077,6 +10077,71 @@ Elm.Json.Decode.make = function (_elm) {
                                         ,customDecoder: customDecoder};
     };
 Elm.Native = Elm.Native || {};
+Elm.Native.Mouse = {};
+Elm.Native.Mouse.make = function(localRuntime) {
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Mouse = localRuntime.Native.Mouse || {};
+	if (localRuntime.Native.Mouse.values)
+	{
+		return localRuntime.Native.Mouse.values;
+	}
+
+	var NS = Elm.Native.Signal.make(localRuntime);
+	var Utils = Elm.Native.Utils.make(localRuntime);
+
+	var position = NS.input('Mouse.position', Utils.Tuple2(0, 0));
+
+	var isDown = NS.input('Mouse.isDown', false);
+
+	var clicks = NS.input('Mouse.clicks', Utils.Tuple0);
+
+	var node = localRuntime.isFullscreen()
+		? document
+		: localRuntime.node;
+
+	localRuntime.addListener([clicks.id], node, 'click', function click() {
+		localRuntime.notify(clicks.id, Utils.Tuple0);
+	});
+	localRuntime.addListener([isDown.id], node, 'mousedown', function down() {
+		localRuntime.notify(isDown.id, true);
+	});
+	localRuntime.addListener([isDown.id], node, 'mouseup', function up() {
+		localRuntime.notify(isDown.id, false);
+	});
+	localRuntime.addListener([position.id], node, 'mousemove', function move(e) {
+		localRuntime.notify(position.id, Utils.getXY(e));
+	});
+
+	return localRuntime.Native.Mouse.values = {
+		position: position,
+		isDown: isDown,
+		clicks: clicks
+	};
+};
+
+Elm.Mouse = Elm.Mouse || {};
+Elm.Mouse.make = function (_elm) {
+       "use strict";
+       _elm.Mouse = _elm.Mouse || {};
+       if (_elm.Mouse.values)    return _elm.Mouse.values;
+       var _U = Elm.Native.Utils.make(_elm),
+       $Basics = Elm.Basics.make(_elm),
+       $Native$Mouse = Elm.Native.Mouse.make(_elm),
+       $Signal = Elm.Signal.make(_elm);
+       var _op = {};
+       var clicks = $Native$Mouse.clicks;
+       var isDown = $Native$Mouse.isDown;
+       var position = $Native$Mouse.position;
+       var x = A2($Signal.map,$Basics.fst,position);
+       var y = A2($Signal.map,$Basics.snd,position);
+       return _elm.Mouse.values = {_op: _op
+                                  ,position: position
+                                  ,x: x
+                                  ,y: y
+                                  ,isDown: isDown
+                                  ,clicks: clicks};
+    };
+Elm.Native = Elm.Native || {};
 Elm.Native.Window = {};
 Elm.Native.Window.make = function make(localRuntime) {
 	localRuntime.Native = localRuntime.Native || {};
@@ -13053,7 +13118,9 @@ Elm.Controls.make = function (_elm) {
                                var divs = A2($List.map
                                             ,$Html.div(_U.list([div_style1]))
                                             ,$List.concat(_U.list([first_row,second_row])));
-                               return A2($Html.div,_U.list([glob_style]),divs);
+                               return A2($Html.div
+                                        ,_U.list([glob_style,$Html$Attributes.id("controls")])
+                                        ,divs);
                             } else {
                                var glob_style =
                                $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
@@ -13074,7 +13141,7 @@ Elm.Controls.make = function (_elm) {
                                                 ,$Html.div(_U.list([div_style2]))
                                                 ,first_row);
                                return A2($Html.div
-                                        ,_U.list([glob_style])
+                                        ,_U.list([glob_style,$Html$Attributes.id("controls")])
                                         ,_U.list([$Html.text($Basics.toString(width))
                                                  ,A2($Html.div,_U.list([own_style]),firsties)
                                                  ,A2($Html.div,_U.list([own_style]),seconds)]));
@@ -13200,6 +13267,14 @@ Elm.Controls.make = function (_elm) {
                  ,_0: {x: 0,y: 10,z: 20}
                  ,_1: {x: 0,y: 30,z: 0}};
        };
+       var controllerFocus = $Signal.mailbox(true);
+       var in_focus =
+       Elm.Native.Port.make(_elm).inboundSignal("in_focus"
+                                               ,"Bool"
+                                               ,function (v) {
+                                                  return typeof v === "boolean" ? v
+                                                      : _U.badPort("a boolean (true or false)",v);
+                                               });
        var in_init = Elm.Native.Port.make(_elm).inboundSignal("in_init"
                                                              ,"Bool"
                                                              ,function (v) {
@@ -13217,14 +13292,16 @@ Elm.Controls.make = function (_elm) {
                          return A3($Signal.foldp,funny,0.0,fps_clock);
                       }();
        var camera1 = function () {
-                        var f = function (theta) {
-                           return {x: 100 * $Basics.sin(theta)
-                                  ,y: 30 + 100 * $Basics.sin(theta)
-                                  ,z: 100 * $Basics.cos(theta)};
-                        };
-                        return A2($Signal$Extra._op["<~"]
-                                 ,f
-                                 ,A2($Signal$Extra._op["<~"],$Basics.degrees,updater2));
+                        var f = F2(function (theta,bool) {
+                                   return $Basics.not(bool) ? {x: 100 * $Basics.sin(theta)
+                                                              ,y: 30 + 100 * $Basics.sin(theta)
+                                                              ,z: 100 * $Basics.cos(theta)} : {x: 100,y: 30,z: 100};
+                                });
+                        return A2($Signal$Extra._op["~"]
+                                 ,A2($Signal$Extra._op["<~"]
+                                    ,f
+                                    ,A2($Signal$Extra._op["<~"],$Basics.degrees,updater2))
+                                 ,in_focus);
                      }();
        var out_camera_lookat =
        Elm.Native.Port.make(_elm).outboundSignal("out_camera_lookat"
@@ -13348,6 +13425,7 @@ Elm.Controls.make = function (_elm) {
                                      ,getFurthestPoint: getFurthestPoint
                                      ,scalePoints: scalePoints
                                      ,calculatePoints: calculatePoints
+                                     ,controllerFocus: controllerFocus
                                      ,fps_clock: fps_clock
                                      ,updater: updater
                                      ,updater2: updater2
