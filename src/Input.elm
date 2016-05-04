@@ -1,4 +1,4 @@
-module MyElements where
+module Input where
 
 import Signal exposing (..)
 import Signal.Extra exposing ((<~), (~), combine, switchSample)
@@ -10,7 +10,7 @@ import Graphics.Input exposing (..)
 
 import Html exposing (Html)
 
-import NumericBox exposing (..)
+import Input.Template exposing (..)
 
 
 -- Common abstractions over 
@@ -95,24 +95,36 @@ methodRadios =
     in  [rad1, constant name1, rad2, constant name2]
 
 
--- Tidying up the display according to methods and different functions
-isRK4 : Method -> Bool
-isRK4 method = RK4 == method
 
-switchRK4Euler = switchSample (isRK4 <~ methodChoice.signal)
+--Switch
 
-delta_time = switchRK4Euler dtrk_time dte_time
-dtField    = switchRK4Euler dtrkField dteField
+switchMethod' : Method -> a -> a -> a
+switchMethod' method v1 v2 = 
+    case method of
+        Euler -> v1
+        RK4   -> v2
 
-isRossler : Functions -> Bool
-isRossler funtype = Rossler == funtype
+switchMethod s_v1 s_v2 = switchMethod' <~ methodChoice.signal ~ s_v1 ~ s_v2
 
 
-switchRosslerLorenz = switchSample (isRossler <~ functionsChoice.signal)
-p1 = switchRosslerLorenz pr1 pl1
-p2 = switchRosslerLorenz pr2 pl2
-p3 = switchRosslerLorenz pr3 pl3
+switchFunctions' : Functions -> a -> a -> a
+switchFunctions' functions v1 v2 =
+    case functions of
+        Lorenz  -> v1
+        Rossler -> v2
 
-p1Field = switchRosslerLorenz pr1Field pl1Field
-p2Field = switchRosslerLorenz pr2Field pl2Field
-p3Field = switchRosslerLorenz pr3Field pl3Field
+switchFunctions s_v1 s_v2 = switchFunctions' <~ functionsChoice.signal ~ s_v1 ~ s_v2
+
+---
+
+delta_time = switchMethod dtrk_time dte_time
+dtField    = switchMethod dtrkField dteField
+
+
+p1 = switchFunctions pl1 pr1
+p2 = switchFunctions pl2 pr2
+p3 = switchFunctions pl3 pr3
+
+p1Field = switchFunctions pl1Field pr1Field
+p2Field = switchFunctions pl2Field pr2Field
+p3Field = switchFunctions pl3Field pr3Field

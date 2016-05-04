@@ -12643,11 +12643,14 @@ Elm.Html.Events.make = function (_elm) {
                                         ,keyCode: keyCode
                                         ,Options: Options};
     };
-Elm.NumericBox = Elm.NumericBox || {};
-Elm.NumericBox.make = function (_elm) {
+Elm.Input = Elm.Input || {};
+Elm.Input.Template = Elm.Input.Template || {};
+Elm.Input.Template.make = function (_elm) {
        "use strict";
-       _elm.NumericBox = _elm.NumericBox || {};
-       if (_elm.NumericBox.values)    return _elm.NumericBox.values;
+       _elm.Input = _elm.Input || {};
+       _elm.Input.Template = _elm.Input.Template || {};
+       if (_elm.Input.Template.values)
+          return _elm.Input.Template.values;
        var _U = Elm.Native.Utils.make(_elm),
        $Basics = Elm.Basics.make(_elm),
        $Debug = Elm.Debug.make(_elm),
@@ -12757,47 +12760,67 @@ Elm.NumericBox.make = function (_elm) {
                                              ,_U.list([]));
                          return the_element;
                       });
-       return _elm.NumericBox.values = {_op: _op
-                                       ,floatBox: floatBox
-                                       ,intBox: intBox
-                                       ,radio: radio
-                                       ,dropdown: dropdown};
+       return _elm.Input.Template.values = {_op: _op
+                                           ,floatBox: floatBox
+                                           ,intBox: intBox
+                                           ,radio: radio
+                                           ,dropdown: dropdown};
     };
-Elm.MyElements = Elm.MyElements || {};
-Elm.MyElements.make = function (_elm) {
+Elm.Input = Elm.Input || {};
+Elm.Input.make = function (_elm) {
        "use strict";
-       _elm.MyElements = _elm.MyElements || {};
-       if (_elm.MyElements.values)    return _elm.MyElements.values;
+       _elm.Input = _elm.Input || {};
+       if (_elm.Input.values)    return _elm.Input.values;
        var _U = Elm.Native.Utils.make(_elm),
        $Basics = Elm.Basics.make(_elm),
        $Debug = Elm.Debug.make(_elm),
        $Html = Elm.Html.make(_elm),
+       $Input$Template = Elm.Input.Template.make(_elm),
        $List = Elm.List.make(_elm),
        $Maybe = Elm.Maybe.make(_elm),
-       $NumericBox = Elm.NumericBox.make(_elm),
        $Result = Elm.Result.make(_elm),
        $Signal = Elm.Signal.make(_elm),
        $Signal$Extra = Elm.Signal.Extra.make(_elm);
        var _op = {};
+       var switchFunctions$ = F3(function (functions,v1,v2) {
+                                 var _p0 = functions;
+                                 if (_p0.ctor === "Lorenz") {
+                                    return v1;
+                                 } else {
+                                    return v2;
+                                 }
+                              });
+       var switchMethod$ = F3(function (method,v1,v2) {
+                              var _p1 = method;
+                              if (_p1.ctor === "Euler") {
+                                 return v1;
+                              } else {
+                                 return v2;
+                              }
+                           });
        var RK4 = {ctor: "RK4"};
        var methodChoice = $Signal.mailbox(RK4);
-       var isRK4 = function (method) { return _U.eq(RK4,method);};
-       var switchRK4Euler =
-       $Signal$Extra.switchSample(A2($Signal$Extra._op["<~"]
-                                    ,isRK4
-                                    ,methodChoice.signal));
+       var switchMethod = F2(function (s_v1,s_v2) {
+                             return A2($Signal$Extra._op["~"]
+                                      ,A2($Signal$Extra._op["~"]
+                                         ,A2($Signal$Extra._op["<~"],switchMethod$,methodChoice.signal)
+                                         ,s_v1)
+                                      ,s_v2);
+                          });
        var Euler = {ctor: "Euler"};
        var methodRadios = function () {
                              var name2 = $Html.text("RK 4");
                              var name1 = $Html.text("Euler");
                              var isEq = F2(function (a,b) { return _U.eq(a,b);});
                              var rad1 = A2($Signal$Extra._op["<~"]
-                                          ,A2($NumericBox.radio
+                                          ,A2($Input$Template.radio
                                              ,$Signal.message(methodChoice.address)
                                              ,Euler)
                                           ,A2($Signal$Extra._op["<~"],isEq(Euler),methodChoice.signal));
                              var rad2 = A2($Signal$Extra._op["<~"]
-                                          ,A2($NumericBox.radio,$Signal.message(methodChoice.address),RK4)
+                                          ,A2($Input$Template.radio
+                                             ,$Signal.message(methodChoice.address)
+                                             ,RK4)
                                           ,A2($Signal$Extra._op["<~"],isEq(RK4),methodChoice.signal));
                              return _U.list([rad1
                                             ,$Signal.constant(name1)
@@ -12805,18 +12828,20 @@ Elm.MyElements.make = function (_elm) {
                                             ,$Signal.constant(name2)]);
                           }();
        var Rossler = {ctor: "Rossler"};
-       var isRossler = function (funtype) {
-          return _U.eq(Rossler,funtype);
-       };
        var Lorenz = {ctor: "Lorenz"};
        var functionsChoice = $Signal.mailbox(Lorenz);
-       var switchRosslerLorenz =
-       $Signal$Extra.switchSample(A2($Signal$Extra._op["<~"]
-                                    ,isRossler
-                                    ,functionsChoice.signal));
+       var switchFunctions = F2(function (s_v1,s_v2) {
+                                return A2($Signal$Extra._op["~"]
+                                         ,A2($Signal$Extra._op["~"]
+                                            ,A2($Signal$Extra._op["<~"]
+                                               ,switchFunctions$
+                                               ,functionsChoice.signal)
+                                            ,s_v1)
+                                         ,s_v2);
+                             });
        var funToText = function (str) {
-          var _p0 = str;
-          switch (_p0)
+          var _p2 = str;
+          switch (_p2)
           {
             case "Lorenz":
               return Lorenz;
@@ -12831,7 +12856,7 @@ Elm.MyElements.make = function (_elm) {
                                                      ,{ctor: "_Tuple2",_0: "Rossler",_1: "Rossler"}]);
                                   var sender = $Signal.message(functionsChoice.address);
                                   return A2($Signal$Extra._op["<~"]
-                                           ,A3($NumericBox.dropdown,sender,funToText,opts)
+                                           ,A3($Input$Template.dropdown,sender,funToText,opts)
                                            ,A2($Signal$Extra._op["<~"]
                                               ,$Basics.toString
                                               ,functionsChoice.signal));
@@ -12839,7 +12864,7 @@ Elm.MyElements.make = function (_elm) {
        var floatSignalBox = F4(function (min,max,step,val) {
                                var the_mailbox = $Signal.mailbox(val);
                                var the_element = A2($Signal$Extra._op["<~"]
-                                                   ,A4($NumericBox.floatBox
+                                                   ,A4($Input$Template.floatBox
                                                       ,$Signal.message(the_mailbox.address)
                                                       ,min
                                                       ,max
@@ -12847,54 +12872,54 @@ Elm.MyElements.make = function (_elm) {
                                                    ,the_mailbox.signal);
                                return {ctor: "_Tuple2",_0: the_mailbox.signal,_1: the_element};
                             });
-       var _p1 = A4(floatSignalBox,0,2,5.0e-4,5.0e-3);
-       var dte_time = _p1._0;
-       var dteField = _p1._1;
-       var _p2 = A4(floatSignalBox,0,2,5.0e-4,5.0e-2);
-       var dtrk_time = _p2._0;
-       var dtrkField = _p2._1;
-       var delta_time = A2(switchRK4Euler,dtrk_time,dte_time);
-       var dtField = A2(switchRK4Euler,dtrkField,dteField);
-       var _p3 = A4(floatSignalBox,0,5,5.0e-2,0.5);
-       var start_time = _p3._0;
-       var t0Field = _p3._1;
-       var _p4 = A4(floatSignalBox,-1,100,5.0e-4,10);
-       var pl1 = _p4._0;
-       var pl1Field = _p4._1;
-       var _p5 = A4(floatSignalBox,-1,100,5.0e-4,28);
-       var pl2 = _p5._0;
-       var pl2Field = _p5._1;
-       var _p6 = A4(floatSignalBox,-1,100,5.0e-4,2.66);
-       var pl3 = _p6._0;
-       var pl3Field = _p6._1;
-       var _p7 = A4(floatSignalBox,-1,100,5.0e-4,0.2);
-       var pr1 = _p7._0;
-       var pr1Field = _p7._1;
-       var p1 = A2(switchRosslerLorenz,pr1,pl1);
-       var p1Field = A2(switchRosslerLorenz,pr1Field,pl1Field);
-       var _p8 = A4(floatSignalBox,-1,100,5.0e-4,0.2);
-       var pr2 = _p8._0;
-       var pr2Field = _p8._1;
-       var p2 = A2(switchRosslerLorenz,pr2,pl2);
-       var p2Field = A2(switchRosslerLorenz,pr2Field,pl2Field);
-       var _p9 = A4(floatSignalBox,-1,100,5.0e-4,5.7);
-       var pr3 = _p9._0;
-       var pr3Field = _p9._1;
-       var p3 = A2(switchRosslerLorenz,pr3,pl3);
-       var p3Field = A2(switchRosslerLorenz,pr3Field,pl3Field);
-       var _p10 = A4(floatSignalBox,-100,100,0.2,1);
-       var xSignal = _p10._0;
-       var xField = _p10._1;
-       var _p11 = A4(floatSignalBox,-100,100,0.2,1);
-       var ySignal = _p11._0;
-       var yField = _p11._1;
+       var _p3 = A4(floatSignalBox,0,2,5.0e-4,5.0e-3);
+       var dte_time = _p3._0;
+       var dteField = _p3._1;
+       var _p4 = A4(floatSignalBox,0,2,5.0e-4,5.0e-2);
+       var dtrk_time = _p4._0;
+       var dtrkField = _p4._1;
+       var delta_time = A2(switchMethod,dtrk_time,dte_time);
+       var dtField = A2(switchMethod,dtrkField,dteField);
+       var _p5 = A4(floatSignalBox,0,5,5.0e-2,0.5);
+       var start_time = _p5._0;
+       var t0Field = _p5._1;
+       var _p6 = A4(floatSignalBox,-1,100,5.0e-4,10);
+       var pl1 = _p6._0;
+       var pl1Field = _p6._1;
+       var _p7 = A4(floatSignalBox,-1,100,5.0e-4,28);
+       var pl2 = _p7._0;
+       var pl2Field = _p7._1;
+       var _p8 = A4(floatSignalBox,-1,100,5.0e-4,2.66);
+       var pl3 = _p8._0;
+       var pl3Field = _p8._1;
+       var _p9 = A4(floatSignalBox,-1,100,5.0e-4,0.2);
+       var pr1 = _p9._0;
+       var pr1Field = _p9._1;
+       var p1 = A2(switchFunctions,pl1,pr1);
+       var p1Field = A2(switchFunctions,pl1Field,pr1Field);
+       var _p10 = A4(floatSignalBox,-1,100,5.0e-4,0.2);
+       var pr2 = _p10._0;
+       var pr2Field = _p10._1;
+       var p2 = A2(switchFunctions,pl2,pr2);
+       var p2Field = A2(switchFunctions,pl2Field,pr2Field);
+       var _p11 = A4(floatSignalBox,-1,100,5.0e-4,5.7);
+       var pr3 = _p11._0;
+       var pr3Field = _p11._1;
+       var p3 = A2(switchFunctions,pl3,pr3);
+       var p3Field = A2(switchFunctions,pl3Field,pr3Field);
        var _p12 = A4(floatSignalBox,-100,100,0.2,1);
-       var zSignal = _p12._0;
-       var zField = _p12._1;
+       var xSignal = _p12._0;
+       var xField = _p12._1;
+       var _p13 = A4(floatSignalBox,-100,100,0.2,1);
+       var ySignal = _p13._0;
+       var yField = _p13._1;
+       var _p14 = A4(floatSignalBox,-100,100,0.2,1);
+       var zSignal = _p14._0;
+       var zField = _p14._1;
        var intSignalBox = F4(function (min,max,step,val) {
                              var the_mailbox = $Signal.mailbox(val);
                              var the_element = A2($Signal$Extra._op["<~"]
-                                                 ,A4($NumericBox.intBox
+                                                 ,A4($Input$Template.intBox
                                                     ,$Signal.message(the_mailbox.address)
                                                     ,min
                                                     ,max
@@ -12902,65 +12927,68 @@ Elm.MyElements.make = function (_elm) {
                                                  ,the_mailbox.signal);
                              return {ctor: "_Tuple2",_0: the_mailbox.signal,_1: the_element};
                           });
-       var _p13 = A4(intSignalBox,0,100000,100,10000);
-       var iterations = _p13._0;
-       var ixField = _p13._1;
-       return _elm.MyElements.values = {_op: _op
-                                       ,intSignalBox: intSignalBox
-                                       ,floatSignalBox: floatSignalBox
-                                       ,iterations: iterations
-                                       ,ixField: ixField
-                                       ,dteField: dteField
-                                       ,dte_time: dte_time
-                                       ,dtrkField: dtrkField
-                                       ,dtrk_time: dtrk_time
-                                       ,start_time: start_time
-                                       ,t0Field: t0Field
-                                       ,pl1: pl1
-                                       ,pl1Field: pl1Field
-                                       ,pl2: pl2
-                                       ,pl2Field: pl2Field
-                                       ,pl3: pl3
-                                       ,pl3Field: pl3Field
-                                       ,pr1: pr1
-                                       ,pr1Field: pr1Field
-                                       ,pr2: pr2
-                                       ,pr2Field: pr2Field
-                                       ,pr3: pr3
-                                       ,pr3Field: pr3Field
-                                       ,xField: xField
-                                       ,xSignal: xSignal
-                                       ,yField: yField
-                                       ,ySignal: ySignal
-                                       ,zField: zField
-                                       ,zSignal: zSignal
-                                       ,Lorenz: Lorenz
-                                       ,Rossler: Rossler
-                                       ,functionsChoice: functionsChoice
-                                       ,funToText: funToText
-                                       ,functionsDropdown: functionsDropdown
-                                       ,Euler: Euler
-                                       ,RK4: RK4
-                                       ,methodChoice: methodChoice
-                                       ,methodRadios: methodRadios
-                                       ,isRK4: isRK4
-                                       ,switchRK4Euler: switchRK4Euler
-                                       ,delta_time: delta_time
-                                       ,dtField: dtField
-                                       ,isRossler: isRossler
-                                       ,switchRosslerLorenz: switchRosslerLorenz
-                                       ,p1: p1
-                                       ,p2: p2
-                                       ,p3: p3
-                                       ,p1Field: p1Field
-                                       ,p2Field: p2Field
-                                       ,p3Field: p3Field};
+       var _p15 = A4(intSignalBox,0,100000,100,10000);
+       var iterations = _p15._0;
+       var ixField = _p15._1;
+       return _elm.Input.values = {_op: _op
+                                  ,intSignalBox: intSignalBox
+                                  ,floatSignalBox: floatSignalBox
+                                  ,iterations: iterations
+                                  ,ixField: ixField
+                                  ,dteField: dteField
+                                  ,dte_time: dte_time
+                                  ,dtrkField: dtrkField
+                                  ,dtrk_time: dtrk_time
+                                  ,start_time: start_time
+                                  ,t0Field: t0Field
+                                  ,pl1: pl1
+                                  ,pl1Field: pl1Field
+                                  ,pl2: pl2
+                                  ,pl2Field: pl2Field
+                                  ,pl3: pl3
+                                  ,pl3Field: pl3Field
+                                  ,pr1: pr1
+                                  ,pr1Field: pr1Field
+                                  ,pr2: pr2
+                                  ,pr2Field: pr2Field
+                                  ,pr3: pr3
+                                  ,pr3Field: pr3Field
+                                  ,xField: xField
+                                  ,xSignal: xSignal
+                                  ,yField: yField
+                                  ,ySignal: ySignal
+                                  ,zField: zField
+                                  ,zSignal: zSignal
+                                  ,Lorenz: Lorenz
+                                  ,Rossler: Rossler
+                                  ,functionsChoice: functionsChoice
+                                  ,funToText: funToText
+                                  ,functionsDropdown: functionsDropdown
+                                  ,Euler: Euler
+                                  ,RK4: RK4
+                                  ,methodChoice: methodChoice
+                                  ,methodRadios: methodRadios
+                                  ,switchMethod$: switchMethod$
+                                  ,switchMethod: switchMethod
+                                  ,switchFunctions$: switchFunctions$
+                                  ,switchFunctions: switchFunctions
+                                  ,delta_time: delta_time
+                                  ,dtField: dtField
+                                  ,p1: p1
+                                  ,p2: p2
+                                  ,p3: p3
+                                  ,p1Field: p1Field
+                                  ,p2Field: p2Field
+                                  ,p3Field: p3Field};
     };
-Elm.Point3D = Elm.Point3D || {};
-Elm.Point3D.make = function (_elm) {
+Elm.Math = Elm.Math || {};
+Elm.Math.Point3D = Elm.Math.Point3D || {};
+Elm.Math.Point3D.make = function (_elm) {
        "use strict";
-       _elm.Point3D = _elm.Point3D || {};
-       if (_elm.Point3D.values)    return _elm.Point3D.values;
+       _elm.Math = _elm.Math || {};
+       _elm.Math.Point3D = _elm.Math.Point3D || {};
+       if (_elm.Math.Point3D.values)
+          return _elm.Math.Point3D.values;
        var _U = Elm.Native.Utils.make(_elm),
        $Basics = Elm.Basics.make(_elm),
        $Debug = Elm.Debug.make(_elm),
@@ -12969,6 +12997,12 @@ Elm.Point3D.make = function (_elm) {
        $Result = Elm.Result.make(_elm),
        $Signal = Elm.Signal.make(_elm);
        var _op = {};
+       var distance3D = F2(function (pt1,pt2) {
+                           var dz = Math.pow(pt1.z - pt2.z,2);
+                           var dy = Math.pow(pt1.y - pt2.y,2);
+                           var dx = Math.pow(pt1.x - pt2.x,2);
+                           return $Basics.sqrt(dx + dy + dz);
+                        });
        var divScalar = F2(function (_p0,v) {
                           var _p1 = _p0;
                           return {x: _p1.x / v,y: _p1.y / v,z: _p1.z / v};
@@ -12985,30 +13019,34 @@ Elm.Point3D.make = function (_elm) {
                           return {x: _p5.x + v,y: _p5.y + v,z: _p5.z + v};
                        });
        var Point3D = F3(function (a,b,c) { return {x: a,y: b,z: c};});
-       return _elm.Point3D.values = {_op: _op
-                                    ,Point3D: Point3D
-                                    ,addScalar: addScalar
-                                    ,addPoint: addPoint
-                                    ,multScalar: multScalar
-                                    ,divScalar: divScalar};
+       return _elm.Math.Point3D.values = {_op: _op
+                                         ,Point3D: Point3D
+                                         ,addScalar: addScalar
+                                         ,addPoint: addPoint
+                                         ,multScalar: multScalar
+                                         ,divScalar: divScalar
+                                         ,distance3D: distance3D};
     };
-Elm.Numerical = Elm.Numerical || {};
-Elm.Numerical.make = function (_elm) {
+Elm.Math = Elm.Math || {};
+Elm.Math.Numerical = Elm.Math.Numerical || {};
+Elm.Math.Numerical.make = function (_elm) {
        "use strict";
-       _elm.Numerical = _elm.Numerical || {};
-       if (_elm.Numerical.values)    return _elm.Numerical.values;
+       _elm.Math = _elm.Math || {};
+       _elm.Math.Numerical = _elm.Math.Numerical || {};
+       if (_elm.Math.Numerical.values)
+          return _elm.Math.Numerical.values;
        var _U = Elm.Native.Utils.make(_elm),
        $Basics = Elm.Basics.make(_elm),
        $Debug = Elm.Debug.make(_elm),
        $List = Elm.List.make(_elm),
+       $Math$Point3D = Elm.Math.Point3D.make(_elm),
        $Maybe = Elm.Maybe.make(_elm),
-       $Point3D = Elm.Point3D.make(_elm),
        $Result = Elm.Result.make(_elm),
        $Signal = Elm.Signal.make(_elm),
        $Trampoline = Elm.Trampoline.make(_elm);
        var _op = {};
        var prepareFunction = F3(function (f,dt,p0) {
-                                return A2($Point3D.multScalar,f(p0),dt);
+                                return A2($Math$Point3D.multScalar,f(p0),dt);
                              });
        var generate$ = F4(function (f,v,i,vs) {
                           if (_U.cmp(i,0) < 1)    return $Trampoline.Done(vs); else {
@@ -13023,10 +13061,10 @@ Elm.Numerical.make = function (_elm) {
                          return $Trampoline.trampoline(A4(generate$,f,v,i,_U.list([])));
                       });
        var rk4 = F4(function (f,dt,t0,p0) {
-                    var div = $Point3D.divScalar;
-                    var mult = $Point3D.multScalar;
+                    var div = $Math$Point3D.divScalar;
+                    var mult = $Math$Point3D.multScalar;
                     var k1 = A2(mult,A2(f,t0,p0),dt);
-                    var add = $Point3D.addPoint;
+                    var add = $Math$Point3D.addPoint;
                     var k2 = A2(mult,A2(f,t0 + dt / 2,A2(add,p0,A2(div,k1,2))),dt);
                     var k3 = A2(mult,A2(f,t0 + dt / 2,A2(add,p0,A2(div,k2,2))),dt);
                     var k4 = A2(mult,A2(f,t0 + dt,A2(add,p0,k3)),dt);
@@ -13052,40 +13090,196 @@ Elm.Numerical.make = function (_elm) {
                        return pts;
                     });
        var euler = F2(function (f,p0) {
-                      return A2($Point3D.addPoint,f(p0),p0);
+                      return A2($Math$Point3D.addPoint,f(p0),p0);
                    });
        var useEuler = F4(function (f,dt,p0,max_i) {
                          var numFun = euler(A2(prepareFunction,f,dt));
                          return A3(generate,numFun,p0,max_i);
                       });
-       return _elm.Numerical.values = {_op: _op
-                                      ,euler: euler
-                                      ,rk4: rk4
-                                      ,generate: generate
-                                      ,generate$: generate$
-                                      ,prepareFunction: prepareFunction
-                                      ,useEuler: useEuler
-                                      ,useRK4: useRK4};
+       return _elm.Math.Numerical.values = {_op: _op
+                                           ,euler: euler
+                                           ,rk4: rk4
+                                           ,generate: generate
+                                           ,generate$: generate$
+                                           ,prepareFunction: prepareFunction
+                                           ,useEuler: useEuler
+                                           ,useRK4: useRK4};
     };
-Elm.Controls = Elm.Controls || {};
-Elm.Controls.make = function (_elm) {
+Elm.Math = Elm.Math || {};
+Elm.Math.Functions = Elm.Math.Functions || {};
+Elm.Math.Functions.make = function (_elm) {
        "use strict";
-       _elm.Controls = _elm.Controls || {};
-       if (_elm.Controls.values)    return _elm.Controls.values;
+       _elm.Math = _elm.Math || {};
+       _elm.Math.Functions = _elm.Math.Functions || {};
+       if (_elm.Math.Functions.values)
+          return _elm.Math.Functions.values;
+       var _U = Elm.Native.Utils.make(_elm),
+       $Basics = Elm.Basics.make(_elm),
+       $Debug = Elm.Debug.make(_elm),
+       $List = Elm.List.make(_elm),
+       $Math$Point3D = Elm.Math.Point3D.make(_elm),
+       $Maybe = Elm.Maybe.make(_elm),
+       $Result = Elm.Result.make(_elm),
+       $Signal = Elm.Signal.make(_elm);
+       var _op = {};
+       var lorenzFunction = F2(function (_p1,_p0) {
+                               var _p2 = _p1;
+                               var _p3 = _p0;
+                               var _p6 = _p3.z;
+                               var _p5 = _p3.y;
+                               var _p4 = _p3.x;
+                               var nz = _p4 * _p5 - _p2.p3 * _p6;
+                               var ny = _p4 * (_p2.p2 - _p6) - _p5;
+                               var nx = _p2.p1 * (_p5 - _p4);
+                               return {x: nx,y: ny,z: nz};
+                            });
+       var rosslerFunction = F2(function (_p8,_p7) {
+                                var _p9 = _p8;
+                                var _p10 = _p7;
+                                var _p13 = _p10.z;
+                                var _p12 = _p10.y;
+                                var _p11 = _p10.x;
+                                var nz = _p9.p2 + _p11 * _p13 - _p9.p3 * _p13;
+                                var ny = _p11 + _p9.p1 * _p12;
+                                var nx = 0 - (_p12 + _p13);
+                                return {x: nx,y: ny,z: nz};
+                             });
+       var FunParams = F3(function (a,b,c) {
+                          return {p1: a,p2: b,p3: c};
+                       });
+       return _elm.Math.Functions.values = {_op: _op
+                                           ,FunParams: FunParams
+                                           ,rosslerFunction: rosslerFunction
+                                           ,lorenzFunction: lorenzFunction};
+    };
+Elm.Backend = Elm.Backend || {};
+Elm.Backend.make = function (_elm) {
+       "use strict";
+       _elm.Backend = _elm.Backend || {};
+       if (_elm.Backend.values)    return _elm.Backend.values;
+       var _U = Elm.Native.Utils.make(_elm),
+       $Basics = Elm.Basics.make(_elm),
+       $Debug = Elm.Debug.make(_elm),
+       $Input = Elm.Input.make(_elm),
+       $List = Elm.List.make(_elm),
+       $Math$Functions = Elm.Math.Functions.make(_elm),
+       $Math$Numerical = Elm.Math.Numerical.make(_elm),
+       $Math$Point3D = Elm.Math.Point3D.make(_elm),
+       $Maybe = Elm.Maybe.make(_elm),
+       $Result = Elm.Result.make(_elm),
+       $Signal = Elm.Signal.make(_elm),
+       $Signal$Extra = Elm.Signal.Extra.make(_elm),
+       $Time = Elm.Time.make(_elm);
+       var _op = {};
+       var getFurthestPoint = function (array) {
+          var dist = function (pt1) {
+             return A2($Math$Point3D.distance3D,pt1,{x: 0,y: 0,z: 0});
+          };
+          var getFurthest = F2(function (pt1,pt2) {
+                               return _U.cmp(dist(pt1),dist(pt2)) < 0 ? pt2 : pt1;
+                            });
+          return A3($List.foldl,getFurthest,{x: 0,y: 0,z: 1},array);
+       };
+       var scalePoints = function (points) {
+          var max_d = A2($Math$Point3D.distance3D
+                        ,{x: 0,y: 0,z: 0}
+                        ,getFurthestPoint(points));
+          var d = max_d / 160;
+          return A2($List.map
+                   ,A2($Basics.flip,$Math$Point3D.divScalar,d)
+                   ,points);
+       };
+       var calculatePoints = F7(function (method
+                                         ,f
+                                         ,start_pt
+                                         ,dt
+                                         ,t0
+                                         ,max_i
+                                         ,dummy_val) {
+                                var points = function () {
+                                                var _p0 = method;
+                                                if (_p0.ctor === "RK4") {
+                                                   return A5($Math$Numerical.useRK4,f,dt,t0,start_pt,max_i);
+                                                } else {
+                                                   return A4($Math$Numerical.useEuler,f,dt,start_pt,max_i);
+                                                }
+                                             }();
+                                return scalePoints(points);
+                             });
+       var lorenzParams = function () {
+                             var createLorenz = F3(function (el1,el2,el3) {
+                                                   return {p1: el1,p2: el2,p3: el3};
+                                                });
+                             return A2($Signal$Extra._op["~"]
+                                      ,A2($Signal$Extra._op["~"]
+                                         ,A2($Signal$Extra._op["<~"],createLorenz,$Input.p1)
+                                         ,$Input.p2)
+                                      ,$Input.p3);
+                          }();
+       var startingPoint = function () {
+                              var chooseFun = F3(function (xSig,ySig,zSig) {
+                                                 return {x: xSig,y: ySig,z: zSig};
+                                              });
+                              return A2($Signal$Extra._op["~"]
+                                       ,A2($Signal$Extra._op["~"]
+                                          ,A2($Signal$Extra._op["<~"],chooseFun,$Input.xSignal)
+                                          ,$Input.ySignal)
+                                       ,$Input.zSignal);
+                           }();
+       var chooseFunction = function () {
+                               var chooseFun = F2(function (what_f,lorenzParams) {
+                                                  var _p1 = what_f;
+                                                  if (_p1.ctor === "Lorenz") {
+                                                     return $Math$Functions.lorenzFunction(lorenzParams);
+                                                  } else {
+                                                     return $Math$Functions.rosslerFunction(lorenzParams);
+                                                  }
+                                               });
+                               return A2($Signal$Extra._op["~"]
+                                        ,A2($Signal$Extra._op["<~"]
+                                           ,chooseFun
+                                           ,$Input.functionsChoice.signal)
+                                        ,$Signal.dropRepeats(lorenzParams));
+                            }();
+       var updater = function (dt) {
+          return {ctor: "_Tuple2"
+                 ,_0: {x: 0,y: 10,z: 20}
+                 ,_1: {x: 0,y: 30,z: 0}};
+       };
+       var fps_clock = $Time.fps(60);
+       var updater2 = function () {
+                         var funny = F2(function (dt,state) {
+                                        return dt / 16.6 * 0.3 + state;
+                                     });
+                         return A3($Signal.foldp,funny,0.0,fps_clock);
+                      }();
+       return _elm.Backend.values = {_op: _op
+                                    ,fps_clock: fps_clock
+                                    ,updater: updater
+                                    ,updater2: updater2
+                                    ,chooseFunction: chooseFunction
+                                    ,startingPoint: startingPoint
+                                    ,lorenzParams: lorenzParams
+                                    ,getFurthestPoint: getFurthestPoint
+                                    ,scalePoints: scalePoints
+                                    ,calculatePoints: calculatePoints};
+    };
+Elm.Frontend = Elm.Frontend || {};
+Elm.Frontend.make = function (_elm) {
+       "use strict";
+       _elm.Frontend = _elm.Frontend || {};
+       if (_elm.Frontend.values)    return _elm.Frontend.values;
        var _U = Elm.Native.Utils.make(_elm),
        $Basics = Elm.Basics.make(_elm),
        $Debug = Elm.Debug.make(_elm),
        $Html = Elm.Html.make(_elm),
        $Html$Attributes = Elm.Html.Attributes.make(_elm),
+       $Input = Elm.Input.make(_elm),
        $List = Elm.List.make(_elm),
        $Maybe = Elm.Maybe.make(_elm),
-       $MyElements = Elm.MyElements.make(_elm),
-       $Numerical = Elm.Numerical.make(_elm),
-       $Point3D = Elm.Point3D.make(_elm),
        $Result = Elm.Result.make(_elm),
        $Signal = Elm.Signal.make(_elm),
        $Signal$Extra = Elm.Signal.Extra.make(_elm),
-       $Time = Elm.Time.make(_elm),
        $Window = Elm.Window.make(_elm);
        var _op = {};
        var combine2 = function (ls) {
@@ -13148,7 +13342,7 @@ Elm.Controls.make = function (_elm) {
                             }
                          });
        var isRK4 = function (method) {
-          return _U.eq($MyElements.RK4,method);
+          return _U.eq($Input.RK4,method);
        };
        var br = $Signal.constant(A2($Html.br,_U.list([]),_U.list([])));
        var startPosElement = function () {
@@ -13161,13 +13355,13 @@ Elm.Controls.make = function (_elm) {
                                 return $Signal$Extra.combine(_U.list([desc
                                                                      ,br
                                                                      ,x_desc
-                                                                     ,$MyElements.xField
+                                                                     ,$Input.xField
                                                                      ,br
                                                                      ,y_desc
-                                                                     ,$MyElements.yField
+                                                                     ,$Input.yField
                                                                      ,br
                                                                      ,z_desc
-                                                                     ,$MyElements.zField]));
+                                                                     ,$Input.zField]));
                              }();
        var paramsElement = function () {
                               var p3_d = $Signal.constant($Html.text("p3:"));
@@ -13179,19 +13373,19 @@ Elm.Controls.make = function (_elm) {
                               return $Signal$Extra.combine(_U.list([desc
                                                                    ,br
                                                                    ,p1_d
-                                                                   ,$MyElements.p1Field
+                                                                   ,$Input.p1Field
                                                                    ,br
                                                                    ,p2_d
-                                                                   ,$MyElements.p2Field
+                                                                   ,$Input.p2Field
                                                                    ,br
                                                                    ,p3_d
-                                                                   ,$MyElements.p3Field]));
+                                                                   ,$Input.p3Field]));
                            }();
        var iterationsElement = function () {
                                   var t0_d = $Signal.constant($Html.text("t0:"));
                                   var t0_stuff = $Signal$Extra.combine(_U.list([br
                                                                                ,t0_d
-                                                                               ,$MyElements.t0Field]));
+                                                                               ,$Input.t0Field]));
                                   var dt_d = $Signal.constant($Html.text("dt:"));
                                   var ix_d = $Signal.constant($Html.text("ix:"));
                                   var desc = $Signal.constant(A2($Html.span
@@ -13200,10 +13394,10 @@ Elm.Controls.make = function (_elm) {
                                   var rest = $Signal$Extra.combine(_U.list([desc
                                                                            ,br
                                                                            ,ix_d
-                                                                           ,$MyElements.ixField
+                                                                           ,$Input.ixField
                                                                            ,br
                                                                            ,dt_d
-                                                                           ,$MyElements.dtField]));
+                                                                           ,$Input.dtField]));
                                   return A2($Signal$Extra._op["~"]
                                            ,A2($Signal$Extra._op["<~"]
                                               ,F2(function (x,y) {
@@ -13211,9 +13405,7 @@ Elm.Controls.make = function (_elm) {
                                               })
                                               ,rest)
                                            ,A3($Signal$Extra.keepThen
-                                              ,A2($Signal$Extra._op["<~"]
-                                                 ,isRK4
-                                                 ,$MyElements.methodChoice.signal)
+                                              ,A2($Signal$Extra._op["<~"],isRK4,$Input.methodChoice.signal)
                                               ,_U.list([])
                                               ,t0_stuff));
                                }();
@@ -13223,51 +13415,52 @@ Elm.Controls.make = function (_elm) {
                                                               ,_U.list([])
                                                               ,_U.list([$Html.text("Chosen function")])));
                                 return $Signal$Extra.combine(A2($Basics._op["++"]
-                                                               ,_U.list([desc
-                                                                        ,br
-                                                                        ,$MyElements.functionsDropdown
-                                                                        ,br
-                                                                        ,method_desc
-                                                                        ,br])
-                                                               ,$MyElements.methodRadios));
+                                                               ,_U.list([desc,br,$Input.functionsDropdown,br,method_desc,br])
+                                                               ,$Input.methodRadios));
                              }();
-       var main = function () {
-                     var rest_cols = $Signal$Extra.combine(_U.list([paramsElement
-                                                                   ,startPosElement]));
-                     var first_cols = $Signal$Extra.combine(_U.list([functionElement
-                                                                    ,iterationsElement]));
-                     return A2($Signal$Extra._op["~"]
-                              ,A2($Signal$Extra._op["~"]
-                                 ,A2($Signal$Extra._op["<~"],positioning,$Window.width)
-                                 ,first_cols)
-                              ,rest_cols);
-                  }();
-       var lorenzParams = function () {
-                             var createLorenz = F3(function (el1,el2,el3) {
-                                                   return {p1: el1,p2: el2,p3: el3};
-                                                });
-                             return A2($Signal$Extra._op["~"]
-                                      ,A2($Signal$Extra._op["~"]
-                                         ,A2($Signal$Extra._op["<~"],createLorenz,$MyElements.p1)
-                                         ,$MyElements.p2)
-                                      ,$MyElements.p3);
-                          }();
-       var startingPoint = function () {
-                              var chooseFun = F3(function (xSig,ySig,zSig) {
-                                                 return {x: xSig,y: ySig,z: zSig};
-                                              });
-                              return A2($Signal$Extra._op["~"]
-                                       ,A2($Signal$Extra._op["~"]
-                                          ,A2($Signal$Extra._op["<~"],chooseFun,$MyElements.xSignal)
-                                          ,$MyElements.ySignal)
-                                       ,$MyElements.zSignal);
-                           }();
-       var updater = function (dt) {
-          return {ctor: "_Tuple2"
-                 ,_0: {x: 0,y: 10,z: 20}
-                 ,_1: {x: 0,y: 30,z: 0}};
-       };
-       var controllerFocus = $Signal.mailbox(true);
+       var frontus = function () {
+                        var rest_cols = $Signal$Extra.combine(_U.list([paramsElement
+                                                                      ,startPosElement]));
+                        var first_cols = $Signal$Extra.combine(_U.list([functionElement
+                                                                       ,iterationsElement]));
+                        return A2($Signal$Extra._op["~"]
+                                 ,A2($Signal$Extra._op["~"]
+                                    ,A2($Signal$Extra._op["<~"],positioning,$Window.width)
+                                    ,first_cols)
+                                 ,rest_cols);
+                     }();
+       return _elm.Frontend.values = {_op: _op
+                                     ,br: br
+                                     ,startPosElement: startPosElement
+                                     ,paramsElement: paramsElement
+                                     ,isRK4: isRK4
+                                     ,iterationsElement: iterationsElement
+                                     ,functionElement: functionElement
+                                     ,div_style1: div_style1
+                                     ,div_style2: div_style2
+                                     ,positioning: positioning
+                                     ,combine2: combine2
+                                     ,frontus: frontus};
+    };
+Elm.Main = Elm.Main || {};
+Elm.Main.make = function (_elm) {
+       "use strict";
+       _elm.Main = _elm.Main || {};
+       if (_elm.Main.values)    return _elm.Main.values;
+       var _U = Elm.Native.Utils.make(_elm),
+       $Backend = Elm.Backend.make(_elm),
+       $Basics = Elm.Basics.make(_elm),
+       $Debug = Elm.Debug.make(_elm),
+       $Frontend = Elm.Frontend.make(_elm),
+       $Input = Elm.Input.make(_elm),
+       $List = Elm.List.make(_elm),
+       $Math$Point3D = Elm.Math.Point3D.make(_elm),
+       $Maybe = Elm.Maybe.make(_elm),
+       $Result = Elm.Result.make(_elm),
+       $Signal = Elm.Signal.make(_elm),
+       $Signal$Extra = Elm.Signal.Extra.make(_elm);
+       var _op = {};
+       var main = $Frontend.frontus;
        var in_focus =
        Elm.Native.Port.make(_elm).inboundSignal("in_focus"
                                                ,"Bool"
@@ -13275,22 +13468,6 @@ Elm.Controls.make = function (_elm) {
                                                   return typeof v === "boolean" ? v
                                                       : _U.badPort("a boolean (true or false)",v);
                                                });
-       var in_init = Elm.Native.Port.make(_elm).inboundSignal("in_init"
-                                                             ,"Bool"
-                                                             ,function (v) {
-                                                                return typeof v === "boolean" ? v
-                                                                    : _U.badPort("a boolean (true or false)",v);
-                                                             });
-       var fps_clock = A3($Signal$Extra.keepWhen
-                         ,in_init
-                         ,0.0
-                         ,$Time.fps(60));
-       var updater2 = function () {
-                         var funny = F2(function (dt,state) {
-                                        return dt / 16.6 * 0.3 + state;
-                                     });
-                         return A3($Signal.foldp,funny,0.0,fps_clock);
-                      }();
        var camera1 = function () {
                         var f = F2(function (theta,bool) {
                                    return $Basics.not(bool) ? {x: 100 * $Basics.sin(theta)
@@ -13300,7 +13477,7 @@ Elm.Controls.make = function (_elm) {
                         return A2($Signal$Extra._op["~"]
                                  ,A2($Signal$Extra._op["<~"]
                                     ,f
-                                    ,A2($Signal$Extra._op["<~"],$Basics.degrees,updater2))
+                                    ,A2($Signal$Extra._op["<~"],$Basics.degrees,$Backend.updater2))
                                  ,in_focus);
                      }();
        var out_camera_lookat =
@@ -13314,87 +13491,12 @@ Elm.Controls.make = function (_elm) {
                                                       return {ctor: "_Tuple2",_0: p1,_1: {x: 0,y: 30,z: 0}};
                                                    }
                                                    ,camera1));
-       var lorenzFunction = F2(function (_p1,_p0) {
-                               var _p2 = _p1;
-                               var _p3 = _p0;
-                               var _p6 = _p3.z;
-                               var _p5 = _p3.y;
-                               var _p4 = _p3.x;
-                               var nz = _p4 * _p5 - _p2.p3 * _p6;
-                               var ny = _p4 * (_p2.p2 - _p6) - _p5;
-                               var nx = _p2.p1 * (_p5 - _p4);
-                               return {x: nx,y: ny,z: nz};
-                            });
-       var rosslerFunction = F2(function (_p8,_p7) {
-                                var _p9 = _p8;
-                                var _p10 = _p7;
-                                var _p13 = _p10.z;
-                                var _p12 = _p10.y;
-                                var _p11 = _p10.x;
-                                var nz = _p9.p2 + _p11 * _p13 - _p9.p3 * _p13;
-                                var ny = _p11 + _p9.p1 * _p12;
-                                var nx = 0 - (_p12 + _p13);
-                                return {x: nx,y: ny,z: nz};
-                             });
-       var chooseFunction = function () {
-                               var chooseFun = F2(function (what_f,lorenzParams) {
-                                                  var _p14 = what_f;
-                                                  if (_p14.ctor === "Lorenz") {
-                                                     return lorenzFunction(lorenzParams);
-                                                  } else {
-                                                     return rosslerFunction(lorenzParams);
-                                                  }
-                                               });
-                               return A2($Signal$Extra._op["~"]
-                                        ,A2($Signal$Extra._op["<~"]
-                                           ,chooseFun
-                                           ,$MyElements.functionsChoice.signal)
-                                        ,$Signal.dropRepeats(lorenzParams));
-                            }();
-       var LorenzParams = F3(function (a,b,c) {
-                             return {p1: a,p2: b,p3: c};
-                          });
-       var distance3D = F2(function (pt1,pt2) {
-                           var dz = Math.pow(pt1.z - pt2.z,2);
-                           var dy = Math.pow(pt1.y - pt2.y,2);
-                           var dx = Math.pow(pt1.x - pt2.x,2);
-                           return $Basics.sqrt(dx + dy + dz);
-                        });
-       var getFurthestPoint = function (array) {
-          var dist = function (pt1) {
-             return A2(distance3D,pt1,{x: 0,y: 0,z: 0});
-          };
-          var getFurthest = F2(function (pt1,pt2) {
-                               return _U.cmp(dist(pt1),dist(pt2)) < 0 ? pt2 : pt1;
-                            });
-          return A3($List.foldl,getFurthest,{x: 0,y: 0,z: 1},array);
-       };
-       var scalePoints = function (points) {
-          var max_d = A2(distance3D
-                        ,{x: 0,y: 0,z: 0}
-                        ,getFurthestPoint(points));
-          var d = max_d / 160;
-          return A2($List.map
-                   ,A2($Basics.flip,$Point3D.divScalar,d)
-                   ,points);
-       };
-       var calculatePoints = F7(function (method
-                                         ,f
-                                         ,start_pt
-                                         ,dt
-                                         ,t0
-                                         ,max_i
-                                         ,dummy_val) {
-                                var points = function () {
-                                                var _p15 = method;
-                                                if (_p15.ctor === "RK4") {
-                                                   return A5($Numerical.useRK4,f,dt,t0,start_pt,max_i);
-                                                } else {
-                                                   return A4($Numerical.useEuler,f,dt,start_pt,max_i);
-                                                }
-                                             }();
-                                return scalePoints(points);
-                             });
+       var in_init = Elm.Native.Port.make(_elm).inboundSignal("in_init"
+                                                             ,"Bool"
+                                                             ,function (v) {
+                                                                return typeof v === "boolean" ? v
+                                                                    : _U.badPort("a boolean (true or false)",v);
+                                                             });
        var out_points =
        Elm.Native.Port.make(_elm).outboundSignal("out_points"
                                                 ,function (v) {
@@ -13409,39 +13511,15 @@ Elm.Controls.make = function (_elm) {
                                                             ,A2($Signal$Extra._op["~"]
                                                                ,A2($Signal$Extra._op["~"]
                                                                   ,A2($Signal$Extra._op["<~"]
-                                                                     ,calculatePoints
-                                                                     ,$MyElements.methodChoice.signal)
-                                                                  ,chooseFunction)
-                                                               ,startingPoint)
-                                                            ,$MyElements.delta_time)
-                                                         ,$MyElements.start_time)
-                                                      ,$MyElements.iterations)
+                                                                     ,$Backend.calculatePoints
+                                                                     ,$Input.methodChoice.signal)
+                                                                  ,$Backend.chooseFunction)
+                                                               ,$Backend.startingPoint)
+                                                            ,$Input.delta_time)
+                                                         ,$Input.start_time)
+                                                      ,$Input.iterations)
                                                    ,in_init));
-       return _elm.Controls.values = {_op: _op
-                                     ,distance3D: distance3D
-                                     ,LorenzParams: LorenzParams
-                                     ,rosslerFunction: rosslerFunction
-                                     ,lorenzFunction: lorenzFunction
-                                     ,getFurthestPoint: getFurthestPoint
-                                     ,scalePoints: scalePoints
-                                     ,calculatePoints: calculatePoints
-                                     ,controllerFocus: controllerFocus
-                                     ,fps_clock: fps_clock
-                                     ,updater: updater
-                                     ,updater2: updater2
-                                     ,camera1: camera1
-                                     ,chooseFunction: chooseFunction
-                                     ,startingPoint: startingPoint
-                                     ,lorenzParams: lorenzParams
-                                     ,br: br
-                                     ,startPosElement: startPosElement
-                                     ,paramsElement: paramsElement
-                                     ,isRK4: isRK4
-                                     ,iterationsElement: iterationsElement
-                                     ,functionElement: functionElement
-                                     ,div_style1: div_style1
-                                     ,div_style2: div_style2
-                                     ,positioning: positioning
-                                     ,combine2: combine2
-                                     ,main: main};
+       return _elm.Main.values = {_op: _op
+                                 ,camera1: camera1
+                                 ,main: main};
     };

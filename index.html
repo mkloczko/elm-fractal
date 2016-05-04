@@ -39,7 +39,7 @@
 		<script src="dependencies/three.min.js"></script>
 
 		<script src="dependencies/stats.min.js"></script>
-		<script src="elm.js"></script>
+		<script src="dependencies/elm.js"></script>
 		<script src="dependencies/AnaglyphEffect.js"></script>
 		
 
@@ -141,7 +141,7 @@
 
 
 				var div = document.getElementById('renderer');
-				controls = Elm.embed(Elm.Controls, div, {in_init: false, in_focus:false });
+				controls = Elm.embed(Elm.Main, div, {in_init: false, in_focus:false });
 				// controls = Elm.worker(Elm.Controls, {iterations:1000});
 				var material = new THREE.LineBasicMaterial({
 					color: 0xacbd00

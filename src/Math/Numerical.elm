@@ -1,8 +1,8 @@
-module Numerical where
+module Math.Numerical where
 import Trampoline exposing (Trampoline (Done, Continue), trampoline)
 import List exposing (map)
 
-import Point3D exposing (Point3D, multScalar, addPoint, divScalar)
+import Math.Point3D exposing (Point3D, multScalar, addPoint, divScalar)
 
 
 type alias Time = Float

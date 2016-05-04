@@ -1,11 +1,10 @@
-module NumericBox where
+module Input.Template where
 
 import Html exposing (Html, text,input, select, option, toElement)
 import Html.Attributes as A exposing (..)
 import Html.Events exposing (on, targetValue, targetChecked)
 import Signal exposing (Mailbox, mailbox)
---import Graphics.Element exposing (Element, show, flow, down,right)
---import Graphics.Collage exposing (..)
+
 import String exposing (toFloat, toInt)
 import Signal exposing (Signal, Message)
 import Signal.Extra exposing ((<~), (~))

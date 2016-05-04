@@ -1,0 +1,87 @@
+module Backend where
+
+import Signal exposing (Mailbox, mailbox, Signal, constant,foldp)
+import Signal.Extra exposing ((<~), (~), keepWhen)
+import List exposing (map, foldl)
+
+
+
+--import Window
+--import Mouse
+
+import Input exposing (..)
+import Math.Numerical exposing (..)
+import Math.Point3D exposing (Point3D, distance3D, divScalar)
+import Math.Functions exposing (..)
+
+-- Utility functions
+
+
+import Time exposing (fps)
+
+
+-- clock
+fps_clock = fps 60
+
+--- Ports, to connect with JS ---
+{-| in_init is used to signal when the ThreeJS finishes loading |-}
+
+
+
+updater : Time -> (Point3D,Point3D)
+updater dt = ({x = 0, y = 10, z = 20}, {x = 0, y = 30, z = 0})
+
+updater2 : Signal Float
+updater2 =
+    let
+        funny dt state = (dt/16.6 * 0.3) + state
+    in foldp funny 0.0 fps_clock
+
+                --// camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+                --// camera.position.y = 30 + radius * Math.sin( THREE.Math.degToRad( theta ) );
+                --// camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+
+
+
+
+chooseFunction : Signal (Point3D -> Point3D)
+chooseFunction = 
+    let chooseFun what_f lorenzParams = case what_f of
+        Lorenz -> lorenzFunction lorenzParams 
+        Rossler -> rosslerFunction lorenzParams
+    in chooseFun <~ functionsChoice.signal ~ Signal.dropRepeats lorenzParams 
+
+startingPoint : Signal Point3D
+startingPoint = 
+    let chooseFun xSig ySig zSig = {x=xSig, y= ySig, z=zSig}
+    in chooseFun <~ xSignal ~ ySignal ~ zSignal
+
+lorenzParams : Signal FunParams
+lorenzParams = 
+    let createLorenz el1 el2 el3 = {p1 = el1, p2 = el2, p3 = el3}
+    in  createLorenz <~ p1 ~ p2 ~ p3
+
+--input ports - TO BE DEFINED.
+getFurthestPoint : List Point3D -> Point3D
+getFurthestPoint array = 
+    let dist pt1 = distance3D pt1 {x=0,y=0,z=0}
+        getFurthest pt1 pt2 = if (dist pt1) < (dist pt2)
+            then pt2 
+            else pt1
+    in foldl getFurthest {x=0,y=0,z=1} array 
+
+scalePoints points =
+    let max_d  = distance3D {x=0,y=0,z=0} <| getFurthestPoint points
+        d      = max_d / 160
+    in map (flip divScalar d) points
+
+
+
+calculatePoints : Method -> (Point3D -> Point3D) -> Point3D -> Time -> Time -> Int -> Bool -> List Point3D
+calculatePoints method f start_pt dt t0 max_i dummy_val = 
+    --let points = trampoline <| calculateIterations3D (prepareFunction f 0.005) 0 max_i start_pt []
+    --let points = useEuler f 0.005 start_pt max_i
+    let points = case method of
+            RK4 -> useRK4 f dt t0 start_pt max_i
+            Euler -> useEuler f dt start_pt max_i
+    in scalePoints points
