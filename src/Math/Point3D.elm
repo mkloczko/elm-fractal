@@ -25,6 +25,28 @@ distance3D pt1 pt2 =
         dz = (pt1.z - pt2.z)^2
     in sqrt (dx + dy + dz)
         
+
+rotateX : Float -> Point3D -> Point3D
+rotateX phi {x, y, z} = 
+    let nx = x
+        ny = (cos phi)*y - (sin phi)*z
+        nz = (sin phi)*y + (cos phi)*z
+    in  {x = nx, y = ny, z = nz}
+
+rotateY : Float -> Point3D -> Point3D
+rotateY phi {x, y, z} = 
+    let nx = (cos phi)*x + (sin phi)*z
+        ny = y
+        nz = -(sin phi)*x + (cos phi)*z
+    in  {x = nx, y = ny, z = nz}
+
+rotateZ : Float -> Point3D -> Point3D
+rotateZ phi {x, y, z} = 
+    let nx = (cos phi)*x - (sin phi)*y
+        ny = (sin phi)*x + (cos phi)*y
+        nz = z
+    in  {x = nx, y = ny, z = nz}
+
 --params = {p1 = 28, p2 = 10, p3 = 2.66}
 --start_pt = {x = 1, y = 0, z = 0}
 

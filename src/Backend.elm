@@ -1,9 +1,10 @@
 module Backend where
 
-import Signal exposing (Mailbox, mailbox, Signal, constant,foldp)
-import Signal.Extra exposing ((<~), (~), keepWhen)
+import Signal exposing (Mailbox, mailbox, Signal, sampleOn, constant,foldp)
+import Signal.Extra exposing ((<~), (~), keepWhen, deltas)
 import List exposing (map, foldl)
 
+import Mouse
 
 
 --import Window
@@ -11,7 +12,7 @@ import List exposing (map, foldl)
 
 import Input exposing (..)
 import Math.Numerical exposing (..)
-import Math.Point3D exposing (Point3D, distance3D, divScalar)
+import Math.Point3D exposing (..)
 import Math.Functions exposing (..)
 
 -- Utility functions
@@ -37,9 +38,59 @@ updater2 =
         funny dt state = (dt/16.6 * 0.3) + state
     in foldp funny 0.0 fps_clock
 
-                --// camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
-                --// camera.position.y = 30 + radius * Math.sin( THREE.Math.degToRad( theta ) );
-                --// camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+
+camera1 : Signal Point3D 
+camera1 = 
+    let f theta = {x = 100 * sin(theta), y = 30 + 100 * sin(theta), z = 100 * cos(theta) }
+    in  f <~ (degrees <~ updater2)
+
+
+-- Manual camera
+calc_offset : ((number,number),(number,number)) -> (number,number)
+calc_offset ((ox,oy),(nx,ny)) = (nx-ox,ny-oy)
+
+
+dropN : Int -> a -> Signal a -> Signal a
+dropN n val sig =
+    let f _ count = 
+            if count <= 0 then (0)
+            else (count-1)
+        caller = sampleOn sig <| constant 0
+        forwardCheck x = x == 0 
+        is_ok = forwardCheck <~ foldp f n caller
+    in keepWhen is_ok val sig
+
+dropOnce = dropN 1
+
+
+mouse_offies = 
+    let floaty (x,y) = ((toFloat x) / 300.0, (toFloat y) / 300.0)
+    in floaty <~ dropN 2 (0,0) (calc_offset <~ (deltas Mouse.position))
+
+accumulate_offsets : (Float, Float) -> Signal (Float, Float) -> Signal (Float, Float) 
+accumulate_offsets state sig = 
+    let f (nx, ny) (ox,oy) = (nx + ox, ny + oy)
+    in  foldp f state sig
+
+camera_manual' : (Float,Float) -- mouse offsets 
+               -> Float        -- radius
+               -> Float        -- y component
+               -> Point3D      -- result
+camera_manual' (off_x,off_y) r pos_y =
+    let orig = {x = 100, y=0, z=0}
+        rotated = rotateY off_x <| rotateZ (off_y) orig
+    in {rotated | y = rotated.y + pos_y} 
+    --in rotated
+    --in  orig
+    --let nx = r * (cos off_x)*(cos off_y) 
+    --    ny = pos_y + r * (cos off_x)*(sin off_y)
+    --    nz = r * (sin off_x)
+    --in  {x = nx, y = ny, z = nz}
+
+camera_manual : (Float, Float) -> Signal Float -> Signal Float -> Signal Bool -> Signal Point3D
+camera_manual start r pos_y work  = 
+    let offies = accumulate_offsets start <| keepWhen work (0,0) mouse_offies 
+    in  camera_manual' <~ offies ~ r ~ pos_y
 
 
 
