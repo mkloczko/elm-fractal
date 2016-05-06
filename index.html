@@ -45,10 +45,24 @@
 
 		<script>
 
+		//Prevents the default behaviour for shift key.
+		window.addEventListener('keydown', function (event) {
+
+    	// if the keyCode is 16 ( shift key was pressed )
+   		if (event.keyCode === 16) {
+
+        	// prevent default behaviour
+        	event.preventDefault();
+
+        return false;
+    	}
+
+});
+
 		</script>
 
 
-		<div tabindex="2" id="renderer"  onfocus="rendererFocus()" onblur="rendererBlur()">
+		<div tabindex="2" id="renderer">
 			<div tabindex="1" id="controls">
 				</div>
 		</div>
@@ -70,14 +84,27 @@
 			animate();
 
 			function rendererFocus(){
-				console.log("Focusy focus!")
 				controls.ports.in_focus.send(true);
 			}
 
 			function rendererBlur(){
-				console.log("Blury blur!")
 				controls.ports.in_focus.send(false);
 			}
+
+			function mouseScroll(e){
+				// console.log(e)
+				// console.log(e.deltaY)
+				divisor = 1.0;
+				if (window.chrome)
+					divisor = 17;
+				
+				var sum = e.deltaY + e.deltaX
+				var result = Math.round(sum)
+				console.log(divisor, sum, sum/divisor)
+
+				controls.ports.in_scroll.send(result)
+			}
+
 
 			function init() {
 
@@ -141,7 +168,12 @@
 
 
 				var div = document.getElementById('renderer');
-				controls = Elm.embed(Elm.Main, div, {in_init: false, in_focus:false });
+				div.focus()
+				div.addEventListener("wheel",mouseScroll);
+				div.addEventListener("blur",rendererBlur);
+				div.addEventListener("focus",rendererFocus);
+
+				controls = Elm.embed(Elm.Main, div, {in_init: false, in_focus:true, in_scroll: 0 });
 				// controls = Elm.worker(Elm.Controls, {iterations:1000});
 				var material = new THREE.LineBasicMaterial({
 					color: 0xacbd00

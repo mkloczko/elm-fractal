@@ -67,8 +67,8 @@ iterationsElement =
 
 functionElement : Signal (List Html) 
 functionElement = 
-    let desc = constant <| span [] [text "Chosen function"]
-        method_desc = constant <| text "Chosen method"
+    let desc = constant <| span [] [text "Function"]
+        method_desc = constant <| text "Method"
     in  combine ([desc,br,functionsDropdown, br, method_desc,br] ++ methodRadios) 
      
 

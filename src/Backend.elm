@@ -1,7 +1,7 @@
 module Backend where
 
 import Signal exposing (Mailbox, mailbox, Signal, sampleOn, constant,foldp)
-import Signal.Extra exposing ((<~), (~), keepWhen, deltas)
+import Signal.Extra exposing ((<~), (~), keepWhen, keepWhenI, deltas)
 import List exposing (map, foldl)
 
 import Mouse
@@ -50,22 +50,21 @@ calc_offset : ((number,number),(number,number)) -> (number,number)
 calc_offset ((ox,oy),(nx,ny)) = (nx-ox,ny-oy)
 
 
-dropN : Int -> a -> Signal a -> Signal a
-dropN n val sig =
+dropN : Int -> Signal a -> Signal a
+dropN n sig =
     let f _ count = 
             if count <= 0 then (0)
             else (count-1)
         caller = sampleOn sig <| constant 0
         forwardCheck x = x == 0 
         is_ok = forwardCheck <~ foldp f n caller
-    in keepWhen is_ok val sig
+    in keepWhenI is_ok sig
 
-dropOnce = dropN 1
 
 
 mouse_offies = 
-    let floaty (x,y) = ((toFloat x) / 300.0, (toFloat y) / 300.0)
-    in floaty <~ dropN 2 (0,0) (calc_offset <~ (deltas Mouse.position))
+    let floaty (x,y) = ((toFloat x) / 200.0, (toFloat y) / 200.0)
+    in floaty <~ dropN 2 (calc_offset <~ (deltas Mouse.position))
 
 accumulate_offsets : (Float, Float) -> Signal (Float, Float) -> Signal (Float, Float) 
 accumulate_offsets state sig = 
@@ -77,7 +76,7 @@ camera_manual' : (Float,Float) -- mouse offsets
                -> Float        -- y component
                -> Point3D      -- result
 camera_manual' (off_x,off_y) r pos_y =
-    let orig = {x = 100, y=0, z=0}
+    let orig = {x = r, y=0, z=0}
         rotated = rotateY off_x <| rotateZ (off_y) orig
     in {rotated | y = rotated.y + pos_y} 
     --in rotated

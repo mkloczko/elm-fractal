@@ -13543,7 +13543,7 @@ Elm.Backend.make = function (_elm) {
                             }();
        var camera_manual$ = F3(function (_p2,r,pos_y) {
                                var _p3 = _p2;
-                               var orig = {x: 100,y: 0,z: 0};
+                               var orig = {x: r,y: 0,z: 0};
                                var rotated = A2($Math$Point3D.rotateY
                                                ,_p3._0
                                                ,A2($Math$Point3D.rotateZ,_p3._1,orig));
@@ -13559,7 +13559,7 @@ Elm.Backend.make = function (_elm) {
                                            });
                                    return A3($Signal.foldp,f,state,sig);
                                 });
-       var dropN = F3(function (n,val,sig) {
+       var dropN = F2(function (n,sig) {
                       var forwardCheck = function (x) { return _U.eq(x,0);};
                       var caller = A2($Signal.sampleOn,sig,$Signal.constant(0));
                       var f = F2(function (_p8,count) {
@@ -13568,9 +13568,8 @@ Elm.Backend.make = function (_elm) {
                       var is_ok = A2($Signal$Extra._op["<~"]
                                     ,forwardCheck
                                     ,A3($Signal.foldp,f,n,caller));
-                      return A3($Signal$Extra.keepWhen,is_ok,val,sig);
+                      return A2($Signal$Extra.keepWhenI,is_ok,sig);
                    });
-       var dropOnce = dropN(1);
        var calc_offset = function (_p9) {
           var _p10 = _p9;
           return {ctor: "_Tuple2"
@@ -13581,14 +13580,13 @@ Elm.Backend.make = function (_elm) {
                              var floaty = function (_p11) {
                                 var _p12 = _p11;
                                 return {ctor: "_Tuple2"
-                                       ,_0: $Basics.toFloat(_p12._0) / 300.0
-                                       ,_1: $Basics.toFloat(_p12._1) / 300.0};
+                                       ,_0: $Basics.toFloat(_p12._0) / 200.0
+                                       ,_1: $Basics.toFloat(_p12._1) / 200.0};
                              };
                              return A2($Signal$Extra._op["<~"]
                                       ,floaty
-                                      ,A3(dropN
+                                      ,A2(dropN
                                          ,2
-                                         ,{ctor: "_Tuple2",_0: 0,_1: 0}
                                          ,A2($Signal$Extra._op["<~"]
                                             ,calc_offset
                                             ,$Signal$Extra.deltas($Mouse.position))));
@@ -13635,7 +13633,6 @@ Elm.Backend.make = function (_elm) {
                                     ,camera1: camera1
                                     ,calc_offset: calc_offset
                                     ,dropN: dropN
-                                    ,dropOnce: dropOnce
                                     ,mouse_offies: mouse_offies
                                     ,accumulate_offsets: accumulate_offsets
                                     ,camera_manual$: camera_manual$
@@ -13793,10 +13790,10 @@ Elm.Frontend.make = function (_elm) {
                                               ,t0_stuff));
                                }();
        var functionElement = function () {
-                                var method_desc = $Signal.constant($Html.text("Chosen method"));
+                                var method_desc = $Signal.constant($Html.text("Method"));
                                 var desc = $Signal.constant(A2($Html.span
                                                               ,_U.list([])
-                                                              ,_U.list([$Html.text("Chosen function")])));
+                                                              ,_U.list([$Html.text("Function")])));
                                 return $Signal$Extra.combine(A2($Basics._op["++"]
                                                                ,_U.list([desc,br,$Input.functionsDropdown,br,method_desc,br])
                                                                ,$Input.methodRadios));
@@ -13863,6 +13860,16 @@ Elm.Main.make = function (_elm) {
                                      ,sig_b
                                      ,A2($Signal.merge,sig_a,A2($Signal.sampleOn,sig_b,sig_a)));
                          });
+       var processScroll = function (val) {
+          return (0 - $Basics.toFloat(val)) / 60.0;
+       };
+       var in_scroll =
+       Elm.Native.Port.make(_elm).inboundSignal("in_scroll"
+                                               ,"Int"
+                                               ,function (v) {
+                                                  return typeof v === "number" && isFinite(v) && Math.floor(v) ===
+                                                      v ? v : _U.badPort("an integer",v);
+                                               });
        var in_focus =
        Elm.Native.Port.make(_elm).inboundSignal("in_focus"
                                                ,"Bool"
@@ -13893,15 +13900,35 @@ Elm.Main.make = function (_elm) {
                                           ,$Backend.mouse_offies)));
                       return A3($Signal.foldp
                                ,F2(function (x,y) {
-                                  return x + y;
+                                  return A2($Basics.max,x + y,0);
                                })
-                               ,100
+                               ,50
                                ,off_y);
                    }();
        var lookAtP3D = function () {
                           var f = function (val) { return {x: 0,y: val,z: 0};};
                           return A2($Signal$Extra._op["<~"],f,pos_y);
                        }();
+       var canAdjustR = A2($Signal$Extra._op["<~"]
+                          ,and
+                          ,$Signal$Extra.combine(_U.list([in_focus
+                                                         ,negate($Keyboard.shift)])));
+       var pos_r = function () {
+                      var off_r = A2($Signal$Extra._op["<~"]
+                                    ,function (x) {
+                                       return 0 - x;
+                                    }
+                                    ,A3($Signal$Extra.keepWhen
+                                       ,canAdjustR
+                                       ,0
+                                       ,A2($Signal$Extra._op["<~"],processScroll,in_scroll)));
+                      return A3($Signal.foldp
+                               ,F2(function (x,y) {
+                                  return A2($Basics.max,x + y,25);
+                               })
+                               ,100
+                               ,off_r);
+                   }();
        var in_init = Elm.Native.Port.make(_elm).inboundSignal("in_init"
                                                              ,"Bool"
                                                              ,function (v) {
@@ -13945,16 +13972,19 @@ Elm.Main.make = function (_elm) {
                                                          ,in_init
                                                          ,A4($Backend.camera_manual
                                                             ,{ctor: "_Tuple2",_0: 0,_1: 0}
-                                                            ,$Signal.constant(100)
+                                                            ,pos_r
                                                             ,pos_y
                                                             ,canRotate)))
                                                    ,lookAtP3D));
        return _elm.Main.values = {_op: _op
+                                 ,processScroll: processScroll
                                  ,sampleWhenI: sampleWhenI
                                  ,and: and
                                  ,negate: negate
                                  ,canRotate: canRotate
                                  ,canAdjustY: canAdjustY
+                                 ,canAdjustR: canAdjustR
+                                 ,pos_r: pos_r
                                  ,pos_y: pos_y
                                  ,lookAtP3D: lookAtP3D
                                  ,main: main};
