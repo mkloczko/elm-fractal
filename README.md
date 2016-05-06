@@ -20,6 +20,7 @@ Click on the canvas to rotate the camera around the attractor. Use shift to move
 The inpux boxes can be modified using up and down arrows.
 
 
+
 #### Controls
 
 Function - choose between Lorenz and Rosslers attractors.
@@ -41,5 +42,6 @@ Parameters:
 Parameters for given functions. Change them to see the difference in generated attractors.
 
 Starting point:
+
 
 The starting point for simulation. Has to be different from x = 0, y = 0, z = 0.
