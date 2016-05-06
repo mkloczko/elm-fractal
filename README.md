@@ -1,11 +1,11 @@
 ## Introduction
 
 A tool for visualizing different attractors using different numerical methods.
-Use the provided controls to modify different parameters and see their effect on the visualisation. 
+Use the provided controls to modify different parameters and see their effect on the visualisation.
 
 You can follow the link [here](http://student.agh.edu.pl/~mkloczko/fractal/) to see it in action.
 
-The project requires WebGL and is best viewed in Chrome. 
+The project requires WebGL and is best viewed in Chrome.
 
 Tested with both Chrome and Firefox.
 
@@ -13,18 +13,18 @@ Tested with both Chrome and Firefox.
 
 The project is build using ThreeJS and Elm. The Elm side of the project is handled by make.sh script.
 
-## Usage: 
+## Usage:
 
 Click on the canvas to rotate the camera around the attractor. Use shift to move the height.
 
-The inpux boxes can be modified using up and down arrows.
+The input boxes can be modified using up and down arrows.
 
 
 
 #### Controls
 - **Function**: Choose between Lorenz and Rosslers attractors.
 
-- **Method**:  Change the derivatation methods - Euler or 4th order Runge Kutta.
+- **Method**:  Change the derivation methods - Euler or 4th order Runge Kutta.
 
 
 ###### Simulation:
