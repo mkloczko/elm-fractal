@@ -1,4 +1,4 @@
-# Introduction
+## Introduction
 
 A tool for visualizing different attractors using different numerical methods.
 Use the provided controls to modify different parameters and see their effect on the visualisation. 
@@ -9,11 +9,11 @@ The project requires WebGL and is best viewed in Chrome.
 
 Tested with both Chrome and Firefox.
 
-# Compiling
+## Compilation
 
 The project is build using ThreeJS and Elm. The Elm side of the project is handled by make.sh script.
 
-# Usage: 
+## Usage: 
 
 Click on the canvas to rotate the camera around the attractor. Use shift to move the height.
 
