@@ -22,26 +22,21 @@ The inpux boxes can be modified using up and down arrows.
 
 
 #### Controls
+- **Function**: Choose between Lorenz and Rosslers attractors.
 
-Function - choose between Lorenz and Rosslers attractors.
-
-Method   - change the derivatation methods - Euler or 4th order Runge Kutta.
-
-
-Simulation:
-
-ix       - iterations
-
-dt       - time step - controls the trade off between precision and furthering the simulation
-
-d0       - starting time - only relevant for RK4 method.
+- **Method**:  Change the derivatation methods - Euler or 4th order Runge Kutta.
 
 
-Parameters:
+###### Simulation:
+ - **ix**: Iterations
 
+ - **dt**: Time step. Controls the trade off between precision and furthering the simulation
+
+ - **t0**: Start time. Only relevant for RK4 method.
+
+
+###### Parameters:
 Parameters for given functions. Change them to see the difference in generated attractors.
 
-Starting point:
-
-
+###### Starting point:
 The starting point for simulation. Has to be different from x = 0, y = 0, z = 0.
