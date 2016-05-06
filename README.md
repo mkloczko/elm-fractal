@@ -1,30 +1,36 @@
-# Fractals
+# Introduction
 
-A little demo showing Lorentz attractor.
+A tool for visualizing different attractors using different numerical methods.
+Use the provided controls to modify different parameters and see their effect on the visualisation. 
 
-Made using ThreeJS and Elm.
+You can follow the link [here](https://student.agh.edu.pl/~mkloczko/fractal/) to see it in action.
 
-# What to do ?
+The project requires WebGL and is best viewed in Chrome. 
 
-You can modify the attractor's parameters and see the result in your browser.
+Tested with both Chrome and Firefox.
+
+# Compiling
+
+The project is build using ThreeJS and Elm. The Elm side of the project is handled by make.sh script.
+
+# Usage: 
+
+Click on the canvas to rotate the camera around the attractor. Use shift to move the height.
+
+The inpux boxes can be modified using up and down arrows.
 
 
-# Anaglyph
+## Controls
+Function - choose between Lorenz and Rosslers attractors.
+Method   - change the derivatation methods - Euler or 4th order Runge Kutta.
 
-To use anaglyph rendering please check the "Anaglyph on/off"
-The anaglyph rendering is done using the AnaglyphEffect library found at:
+Simulation:
+ix       - iterations
+dt       - time step - controls the trade off between precision and furthering the simulation
+d0       - starting time - only relevant for RK4 method.
 
-By włączyć renderowanie anaglifu należy zaznaczyć checkbox "Anaglyph on/off".
-    http://threejs.org/examples/js/effects/AnaglyphEffect.js
-This library was slighty modified. Functions 'getFocalLength" and 'setFocalLength' were added.
+Parameters:
+Parameters for given functions. Change them to see the difference in generated attractors.
 
-
-
-Renderowanie anaglifu jest zrobione za pomocą biblioteki AnaglyphEffect, pobranej ze strony:
-
-Zawarty w katalogu AnaglyphEffect jest lekko zmodyfikowany - zostały dodane funkcje `getFocalLength`, `setFocalLength`. 
-
-AnaglyphEffect korzysta z parametrów obiektu THREEJS.PerspectiveCamera, takich jak `near`, `far`, `aspect`, oraz `fov`.
-
-AnaglyphEffect korzysta również z parametru `focalLenght`, który jest niezależny od użytej kamery.
-Za pomocą funkcji `setFocalLength` można zmienić ten parametr.
+Starting point:
+The starting point for simulation. Has to be different from x = 0, y = 0, z = 0.

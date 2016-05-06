@@ -12943,15 +12943,7 @@ Elm.Input.Template.make = function (_elm) {
                                                      ,_U.list([$Html.text(_p1._1)]));
                                          }
                                          ,vals);
-                         var attribs_style =
-                         _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2"
-                                                                  ,_0: "min-width"
-                                                                  ,_1: "20%"}
-                                                                 ,{ctor: "_Tuple2",_0: "max-width",_1: "40%"}
-                                                                 ,{ctor: "_Tuple2",_0: "padding-left",_1: "5%"}
-                                                                 ,{ctor: "_Tuple2",_0: "padding-right",_1: "5%"}
-                                                                 ,{ctor: "_Tuple2",_0: "margin-left",_1: "5%"}
-                                                                 ,{ctor: "_Tuple2",_0: "margin-right",_1: "5%"}]))]);
+                         var attribs_style = _U.list([$Html$Attributes.id("input")]);
                          var listener1 = A3($Html$Events.on
                                            ,"change"
                                            ,$Html$Events.targetValue
@@ -12963,6 +12955,7 @@ Elm.Input.Template.make = function (_elm) {
                          return the_element;
                       });
        var radio = F3(function (sender,val,is_on) {
+                      var attribs_style = _U.list([$Html$Attributes.id("input")]);
                       var listener1 = A3($Html$Events.on
                                         ,"change"
                                         ,$Html$Events.targetChecked
@@ -12976,15 +12969,7 @@ Elm.Input.Template.make = function (_elm) {
                       return the_element;
                    });
        var intBox = F5(function (sender,min,max,step,val) {
-                       var attribs_style =
-                       _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2"
-                                                                ,_0: "min-width"
-                                                                ,_1: "20%"}
-                                                               ,{ctor: "_Tuple2",_0: "max-width",_1: "40%"}
-                                                               ,{ctor: "_Tuple2",_0: "padding-left",_1: "5%"}
-                                                               ,{ctor: "_Tuple2",_0: "padding-right",_1: "5%"}
-                                                               ,{ctor: "_Tuple2",_0: "margin-left",_1: "5%"}
-                                                               ,{ctor: "_Tuple2",_0: "margin-right",_1: "5%"}]))]);
+                       var attribs_style = _U.list([$Html$Attributes.id("input")]);
                        var listener1 = A3($Html$Events.on
                                          ,"input"
                                          ,$Html$Events.targetValue
@@ -13003,15 +12988,7 @@ Elm.Input.Template.make = function (_elm) {
                        return the_element;
                     });
        var floatBox = F5(function (sender,min,max,step,val) {
-                         var attribs_style =
-                         _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2"
-                                                                  ,_0: "min-width"
-                                                                  ,_1: "20%"}
-                                                                 ,{ctor: "_Tuple2",_0: "max-width",_1: "40%"}
-                                                                 ,{ctor: "_Tuple2",_0: "padding-left",_1: "5%"}
-                                                                 ,{ctor: "_Tuple2",_0: "padding-right",_1: "5%"}
-                                                                 ,{ctor: "_Tuple2",_0: "margin-left",_1: "5%"}
-                                                                 ,{ctor: "_Tuple2",_0: "margin-right",_1: "5%"}]))]);
+                         var attribs_style = _U.list([$Html$Attributes.id("input")]);
                          var listener1 = A3($Html$Events.on
                                            ,"input"
                                            ,$Html$Events.targetValue
@@ -13667,22 +13644,6 @@ Elm.Frontend.make = function (_elm) {
                                          ,$Signal$Extra.combine
                                          ,ls));
        };
-       var div_style2 =
-       $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
-                                       ,_0: "box-sizing"
-                                       ,_1: "border-box"}
-                                      ,{ctor: "_Tuple2",_0: "width",_1: "50%"}
-                                      ,{ctor: "_Tuple2",_0: "float",_1: "left"}
-                                      ,{ctor: "_Tuple2",_0: "padding-left",_1: "5px"}
-                                      ,{ctor: "_Tuple2",_0: "padding-right",_1: "5px"}]));
-       var div_style1 =
-       $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
-                                       ,_0: "box-sizing"
-                                       ,_1: "border-box"}
-                                      ,{ctor: "_Tuple2",_0: "width",_1: "25%"}
-                                      ,{ctor: "_Tuple2",_0: "float",_1: "left"}
-                                      ,{ctor: "_Tuple2",_0: "padding-left",_1: "5px"}
-                                      ,{ctor: "_Tuple2",_0: "padding-right",_1: "5px"}]));
        var positioning = F3(function (width,first_row,second_row) {
                             if (_U.cmp(width,160 * 4) > 0) {
                                var glob_style =
@@ -13690,7 +13651,8 @@ Elm.Frontend.make = function (_elm) {
                                                                ,_0: "max-width"
                                                                ,_1: "720px"}]));
                                var divs = A2($List.map
-                                            ,$Html.div(_U.list([div_style1]))
+                                            ,$Html.div(_U.list([$Html$Attributes.$class("wide")
+                                                               ,$Html$Attributes.id("nav")]))
                                             ,$List.concat(_U.list([first_row,second_row])));
                                return A2($Html.div
                                         ,_U.list([glob_style,$Html$Attributes.id("controls")])
@@ -13709,18 +13671,35 @@ Elm.Frontend.make = function (_elm) {
                                                                               ,{ctor: "_Tuple2",_0: "margin-top",_1: "5px"}
                                                                               ,{ctor: "_Tuple2",_0: "margin-bottom",_1: "5px"}]));
                                var seconds = A2($List.map
-                                               ,$Html.div(_U.list([div_style2]))
+                                               ,$Html.div(_U.list([$Html$Attributes.$class("narrow")
+                                                                  ,$Html$Attributes.id("nav")]))
                                                ,second_row);
                                var firsties = A2($List.map
-                                                ,$Html.div(_U.list([div_style2]))
+                                                ,$Html.div(_U.list([$Html$Attributes.$class("narrow")
+                                                                   ,$Html$Attributes.id("nav")]))
                                                 ,first_row);
                                return A2($Html.div
                                         ,_U.list([glob_style,$Html$Attributes.id("controls")])
-                                        ,_U.list([$Html.text($Basics.toString(width))
-                                                 ,A2($Html.div,_U.list([own_style]),firsties)
+                                        ,_U.list([A2($Html.div,_U.list([own_style]),firsties)
                                                  ,A2($Html.div,_U.list([own_style]),seconds)]));
                             }
                          });
+       var div_style2 =
+       $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
+                                       ,_0: "box-sizing"
+                                       ,_1: "border-box"}
+                                      ,{ctor: "_Tuple2",_0: "width",_1: "50%"}
+                                      ,{ctor: "_Tuple2",_0: "float",_1: "left"}
+                                      ,{ctor: "_Tuple2",_0: "padding-left",_1: "5px"}
+                                      ,{ctor: "_Tuple2",_0: "padding-right",_1: "5px"}]));
+       var div_style1 =
+       $Html$Attributes.style(_U.list([{ctor: "_Tuple2"
+                                       ,_0: "box-sizing"
+                                       ,_1: "border-box"}
+                                      ,{ctor: "_Tuple2",_0: "width",_1: "25%"}
+                                      ,{ctor: "_Tuple2",_0: "float",_1: "left"}
+                                      ,{ctor: "_Tuple2",_0: "padding-left",_1: "5px"}
+                                      ,{ctor: "_Tuple2",_0: "padding-right",_1: "5px"}]));
        var isRK4 = function (method) {
           return _U.eq($Input.RK4,method);
        };
