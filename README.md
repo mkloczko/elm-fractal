@@ -3,7 +3,7 @@
 A tool for visualizing different attractors using different numerical methods.
 Use the provided controls to modify different parameters and see their effect on the visualisation. 
 
-You can follow the link [here](https://student.agh.edu.pl/~mkloczko/fractal/) to see it in action.
+You can follow the link [here](http://student.agh.edu.pl/~mkloczko/fractal/) to see it in action.
 
 The project requires WebGL and is best viewed in Chrome. 
 
