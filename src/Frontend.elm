@@ -6,7 +6,7 @@ import List exposing (map, concat)
 
 
 import Html exposing (Html, div, span, text)
-import Html.Attributes exposing (id, style, tabindex)
+import Html.Attributes exposing (class, id, style, tabindex)
 import Html.Events exposing (onFocus, onBlur)
 
 import Window 
@@ -82,16 +82,16 @@ div_style2 = style [ ("box-sizing", "border-box"),("width","50%"),("float","left
 positioning : Int -> List (List Html) -> List (List Html) -> Html
 positioning width first_row second_row = 
     if width > 160*4 then
-        let divs = map (div [div_style1]) <| concat [first_row, second_row] --Divs are next to each other
+        let divs = map (div [class "wide", id "nav"]) <| concat [first_row, second_row] --Divs are next to each other
             glob_style = style [("max-width","720px")]
         in div [glob_style,id "controls"] divs
     else 
-        let firsties = map (div [div_style2]) first_row
-            seconds  = map (div [div_style2]) second_row
-            own_style = style [ ("overflow", "auto"),("width", "100%"), ("height","50%")
-                              , ("margin-top", "5px"), ("margin-bottom", "5px")]
+        let firsties = map (div [class "narrow", id "nav"]) first_row
+            seconds  = map (div [class "narrow", id "nav"]) second_row
+            own_style = style [ ("overflow", "auto"),   ("width", "100%"), ("height","50%")
+                              , ("margin-top", "5px"),  ("margin-bottom", "5px")]
             glob_style = style [("max-width", "400px"), ("min-width", "340px")]
-        in  div [glob_style, id "controls"] [text <| toString width,div [own_style] firsties, div [own_style] seconds]
+        in  div [glob_style, id "controls"] [div [own_style] firsties, div [own_style] seconds]
 
 combine2 : List (List (Signal a)) -> Signal (List (List a))
 combine2 ls = combine <| map combine ls
